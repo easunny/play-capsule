@@ -1,0 +1,797 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>🏝️ Île Flottante 3D : Change la Météo (Pluie, Neige, Aurore) &amp; Trouve les 5 Miracles !</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Play Capsule">
+<meta property="og:title" content="🏝️ Île Flottante 3D : Change la Météo (Pluie, Neige, Aurore) &amp; Trouve les 5 Miracles !">
+<meta property="og:description" content="Tourne l'île à 360°, change pluie, neige et aurore, et trouve les 5 miracles.">
+<meta name="description" content="Tourne l'île à 360°, change pluie, neige et aurore, et trouve les 5 miracles.">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;background:#d7f3ff;color:#1e293b}
+  button{font-family:inherit}
+  .app{height:100dvh;max-width:480px;margin:0 auto;display:flex;flex-direction:column;padding:8px 10px calc(8px + env(safe-area-inset-bottom));gap:6px}
+  .top-title{font-size:13px;font-weight:900;line-height:1.25;letter-spacing:-.01em;text-align:center;border-radius:12px;padding:7px 10px;background:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.7);box-shadow:0 6px 16px rgba(15,23,42,.06)}
+  .hud{display:flex;align-items:center;gap:8px}
+  .langs{display:flex;gap:4px}
+  .langs button{background:rgba(255,255,255,.7);border:1px solid rgba(15,23,42,.12);color:#334155;border-radius:99px;padding:3px 8px;font-size:11px;font-weight:800;cursor:pointer}
+  .langs button.on{background:#0f172a;color:#fff;border-color:#0f172a}
+  .sec{margin-left:auto;font-weight:900;font-size:13px;background:rgba(255,255,255,.75);border-radius:99px;padding:4px 10px}
+  .hint{font-size:11px;font-weight:750;min-height:28px;line-height:1.3}
+  .stage{flex:1;min-height:0;position:relative}
+  canvas{width:100%;height:100%;display:block;touch-action:none;border-radius:18px}
+  .bubble{position:absolute;left:12px;right:12px;top:10px;background:rgba(255,255,255,.94);border-radius:14px;padding:8px 10px;font-size:12.5px;font-weight:800;line-height:1.3;opacity:0;pointer-events:none;transition:.25s;box-shadow:0 10px 24px rgba(15,23,42,.12)}
+  .bubble.on{opacity:1}
+  .wxwrap{display:flex;flex-direction:column;gap:4px}
+  .wxname{font-size:11px;font-weight:800;text-align:center;min-height:14px}
+  .wx{display:flex;gap:6px;overflow:auto;background:rgba(255,255,255,.42);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.65);border-radius:18px;padding:6px;box-shadow:0 8px 24px rgba(15,23,42,.08)}
+  .wx button{flex:1 0 auto;border:0;background:transparent;border-radius:14px;padding:7px 8px;font-size:11px;font-weight:800;color:#334155;cursor:pointer;white-space:nowrap}
+  .wx button.on{background:#fff;box-shadow:0 4px 12px rgba(15,23,42,.1)}
+  .cert{position:absolute;inset:0;background:rgba(15,23,42,.38);display:none;align-items:center;justify-content:center;padding:16px;z-index:4}
+  .cert.on{display:flex}
+  .paper{width:min(100%,330px);background:#fffdf8;color:#1c1917;border-radius:18px;padding:14px;box-shadow:0 20px 50px rgba(0,0,0,.28)}
+  .paper small{letter-spacing:.12em;font-weight:800;color:#0e7490;font-size:10px}
+  .paper h2{margin:4px 0 6px;font-size:18px}
+  .paper ul{margin:6px 0;padding:0;list-style:none;font-size:13px;font-weight:750}
+  .paper li{padding:3px 0}
+  .paper p{margin:6px 0 10px;font-size:12px;font-weight:650}
+  .paper .copy{width:100%;border:0;border-radius:12px;padding:11px;font-weight:900;background:linear-gradient(90deg,#67e8f9,#a7f3d0);color:#083344;cursor:pointer}
+  .paper .close{width:100%;margin-top:6px;border:0;background:transparent;font-weight:800;color:#57534e;padding:6px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="top-title" id="pageTitle">🏝️ Île Flottante 3D : Change la Météo (Pluie, Neige, Aurore) &amp; Trouve les 5 Miracles !</div>
+  <div class="hud">
+    <div class="langs">
+      <button data-l="fr" type="button">FR</button>
+      <button data-l="es" type="button">ES</button>
+      <button data-l="de" type="button">DE</button>
+      <button data-l="en" type="button">EN</button>
+    </div>
+    <div class="sec" id="sec">0/5</div>
+  </div>
+  <div class="hint" id="hint"></div>
+  <div class="stage">
+    <canvas id="c"></canvas>
+    <div class="bubble" id="bubble"></div>
+    <div class="cert" id="cert">
+      <div class="paper">
+        <small id="certK"></small>
+        <h2 id="certT"></h2>
+        <ul id="certList"></ul>
+        <p id="certSub"></p>
+        <button class="copy" id="copyBtn" type="button"></button>
+        <button class="close" id="closeBtn" type="button"></button>
+      </div>
+    </div>
+  </div>
+  <div class="wxwrap">
+    <div class="wxname" id="wxname"></div>
+    <div class="wx" id="wx"></div>
+  </div>
+</div>
+<script>
+const DEFAULT_LANG = "fr";
+const GAME = "weather_island";
+const params = new URLSearchParams(location.search);
+let lang = (params.get("lang") || DEFAULT_LANG).toLowerCase().slice(0, 2);
+const I18N = {
+  fr: {
+    title: "🏝️ Île Flottante 3D : Change la Météo (Pluie, Neige, Aurore) & Trouve les 5 Miracles !",
+    sec: "Miracles",
+    hint: "Glisse pour tourner l'île · touche un mouton, le moulin, le chalet",
+    wx: ["☀️ Printemps / Brise","🌧️ Pluie & Arc-en-ciel","❄️ Neige & Aurore","🌸 Coucher de Soleil"],
+    goals: [
+      "☀️ Au printemps, touche le moulin pour l'accélérer",
+      "🌧️ Sous la pluie, touche le nuage pour le double arc-en-ciel",
+      "❄️ Dans la neige, allume le chalet et l'aurore",
+      "🌸 Au coucher, touche le ruisseau pour réveiller les esprits",
+      "💎 Tourne l'île et touche la grotte derrière la cascade"
+    ],
+    found: [
+      "Le moulin file dans la brise.",
+      "Un double arc-en-ciel enjambe l'île.",
+      "Le chalet brille, l'aurore aussi.",
+      "Les esprits du ruisseau se réveillent.",
+      "La grotte de cristal était derrière la cascade."
+    ],
+    names: ["Moulin de printemps","Double arc-en-ciel","Chalet & aurore","Esprits du ruisseau","Grotte de cristal"],
+    baa: "Le mouton fait un petit bond.",
+    need: "Pas sous ce ciel. Change la météo.",
+    behind: "Tourne l'île : la grotte est derrière la cascade.",
+    done: "5/5 · l'île te reconnaît.",
+    certK: "CARNET · ÎLE FLOTTANTE",
+    certT: "Gardien de l'île",
+    certSub: "Tu as tenu les quatre saisons dans une poche.",
+    copy: "📋 Copier mon carnet",
+    copied: "✅ Copié · colle-le en commentaire",
+    close: "Retourner l'île",
+    share: "🏝️ Île flottante · 5/5 miracles\nMoulin, double arc-en-ciel, chalet polaire, esprits du ruisseau, grotte de cristal.\nJ'ai gardé une île dans ma poche."
+  },
+  es: {
+    title: "🏝️ Isla Flotante 3D : ¡Cambia el Clima (Lluvia, Nieve, Aurora) y Halla los 5 Milagros!",
+    sec: "Milagros",
+    hint: "Desliza para girar la isla · toca una oveja, el molino, la casita",
+    wx: ["☀️ Primavera / Brisa","🌧️ Lluvia y Arcoíris","❄️ Nieve y Aurora","🌸 Atardecer"],
+    goals: [
+      "☀️ En primavera, toca el molino para acelerarlo",
+      "🌧️ Con lluvia, toca la nube y llama al doble arcoíris",
+      "❄️ En la nieve, enciende la casita y la aurora",
+      "🌸 Al atardecer, toca el arroyo y despierta a los espíritus",
+      "💎 Gira la isla y toca la cueva detrás de la cascada"
+    ],
+    found: [
+      "El molino corre con la brisa.",
+      "Un doble arcoíris cruza la isla.",
+      "La casita brilla, y la aurora también.",
+      "Los espíritus del arroyo despiertan.",
+      "La cueva de cristal estaba detrás de la cascada."
+    ],
+    names: ["Molino de primavera","Doble arcoíris","Casita y aurora","Espíritus del arroyo","Cueva de cristal"],
+    baa: "La oveja da un saltito.",
+    need: "Este cielo no. Cambia el clima.",
+    behind: "Gira la isla: la cueva está detrás de la cascada.",
+    done: "5/5 · la isla te reconoce.",
+    certK: "CUADERNO · ISLA FLOTANTE",
+    certT: "Guardián de la isla",
+    certSub: "Guardaste las cuatro estaciones en un bolsillo.",
+    copy: "📋 Copiar mi cuaderno",
+    copied: "✅ Copiado · pégalo en comentarios",
+    close: "Volver a la isla",
+    share: "🏝️ Isla flotante · 5/5 milagros\nMolino, doble arcoíris, casita polar, espíritus del arroyo, cueva de cristal.\nGuardé una isla en el bolsillo."
+  },
+  de: {
+    title: "🏝️ Schwebende 3D-Insel : Ändere das Wetter (Regen, Schnee, Polarlicht) & Finde 5 Wunder!",
+    sec: "Wunder",
+    hint: "Ziehen dreht die Insel · tippe Schaf, Mühle oder Hütte",
+    wx: ["☀️ Frühling / Brise","🌧️ Regen & Regenbogen","❄️ Schnee & Polarlicht","🌸 Sonnenuntergang"],
+    goals: [
+      "☀️ Im Frühling die Mühle antippen und beschleunigen",
+      "🌧️ Im Regen die Wolke tippen für den doppelten Regenbogen",
+      "❄️ Im Schnee die Hütte und das Polarlicht anzünden",
+      "🌸 Beim Sonnenuntergang den Bach tippen und die Geister wecken",
+      "💎 Insel drehen und die Höhle hinter dem Wasserfall finden"
+    ],
+    found: [
+      "Die Mühle läuft schneller im Wind.",
+      "Ein doppelter Regenbogen liegt über der Insel.",
+      "Die Hütte glüht, das Polarlicht auch.",
+      "Die Bachgeister sind wach.",
+      "Die Kristallhöhle lag hinter dem Wasserfall."
+    ],
+    names: ["Frühlingsmühle","Doppelter Regenbogen","Hütte & Polarlicht","Bachgeister","Kristallhöhle"],
+    baa: "Das Schaf macht einen Hüpfer.",
+    need: "Nicht unter diesem Himmel. Wetter wechseln.",
+    behind: "Dreh die Insel: die Höhle liegt hinter dem Wasserfall.",
+    done: "5/5 · die Insel kennt dich.",
+    certK: "TAGEBUCH · SCHWEBEINSEL",
+    certT: "Wächter der Insel",
+    certSub: "Du hast vier Jahreszeiten in die Tasche gesteckt.",
+    copy: "📋 Tagebuch kopieren",
+    copied: "✅ Kopiert · ab in die Kommentare",
+    close: "Zurück zur Insel",
+    share: "🏝️ Schwebende Insel · 5/5 Wunder\nMühle, Doppelregenbogen, Polarhütte, Bachgeister, Kristallhöhle.\nIch habe eine Insel in die Tasche gesteckt."
+  },
+  en: {
+    title: "🏝️ 3D Floating Weather Island : Switch Rain, Snow & Aurora to Find 5 Cozy Miracles!",
+    sec: "Miracles",
+    hint: "Drag to spin the island · tap a sheep, the mill, the cottage",
+    wx: ["☀️ Spring Breeze","🌧️ Rain & Rainbow","❄️ Snow & Aurora","🌸 Sunset Glow"],
+    goals: [
+      "☀️ In spring, tap the windmill to speed it up",
+      "🌧️ In the rain, tap the cloud for a double rainbow",
+      "❄️ In the snow, light the cottage and the aurora",
+      "🌸 At sunset, tap the stream to wake the spirits",
+      "💎 Spin the island and tap the cave behind the waterfall"
+    ],
+    found: [
+      "The windmill races in the breeze.",
+      "A double rainbow spans the island.",
+      "The cottage glows, and so does the aurora.",
+      "The stream spirits wake up.",
+      "The crystal cave was behind the waterfall."
+    ],
+    names: ["Spring windmill","Double rainbow","Cottage & aurora","Stream spirits","Crystal cave"],
+    baa: "The sheep does a little hop.",
+    need: "Not under this sky. Switch the weather.",
+    behind: "Spin the island: the cave is behind the falls.",
+    done: "5/5 · the island knows you.",
+    certK: "JOURNAL · FLOATING ISLAND",
+    certT: "Keeper of the island",
+    certSub: "You kept four seasons in a pocket.",
+    copy: "📋 Copy my journal",
+    copied: "✅ Copied · paste it in the comments",
+    close: "Back to the island",
+    share: "🏝️ Floating island · 5/5 miracles\nWindmill, double rainbow, polar cottage, stream spirits, crystal cave.\nI kept an island in my pocket."
+  }
+};
+if (!I18N[lang]) lang = "fr";
+const T = () => I18N[lang];
+const WX = [
+  { sky0: "#b9f3ff", sky1: "#fff7ed", grass: "#4ade80", grass2: "#86efac", rock: "#a8a29e" },
+  { sky0: "#94a3b8", sky1: "#e2e8f0", grass: "#3f8f5a", grass2: "#65a30d", rock: "#78716c" },
+  { sky0: "#0f172a", sky1: "#312e81", grass: "#e2e8f0", grass2: "#f8fafc", rock: "#44403c" },
+  { sky0: "#fb7185", sky1: "#fde68a", grass: "#65a30d", grass2: "#facc15", rock: "#b45309" }
+];
+
+const DOT_URL = "https://dot.hacoo.app/api/v2/dotRecords";
+const pageT0 = Date.now();
+const pageId = (Math.random().toString(16).slice(2) + pageT0.toString(16)).slice(0, 24);
+let started = false, rounds = 0, completed = false, shared = false, summarized = false;
+function sid() {
+  try {
+    let id = localStorage.getItem("pc_sid");
+    if (!id) { id = (crypto.randomUUID && crypto.randomUUID()) || String(Math.random()).slice(2); localStorage.setItem("pc_sid", id); }
+    return id;
+  } catch (e) { return "anon"; }
+}
+function report(aid, extra) {
+  const ts = Date.now();
+  const apar = Object.assign({ game: GAME, lang: lang, page: location.pathname }, extra || {});
+  const payload = JSON.stringify({ data: [{
+    what: "user_trace", who: "client", when: ts, platform: "h5", app: "saramart",
+    context: { app: "saramart", platform: "h5", game: GAME, lang: lang, uuid: sid(), page: location.pathname },
+    data: { type: "event", aid: aid, event_ts: ts, page_create_ts: pageT0, page_id: pageId, page_url: location.href, apar: JSON.stringify(apar) }
+  }] });
+  try {
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(DOT_URL, new Blob([payload], { type: "text/plain;charset=UTF-8" }));
+      return;
+    }
+  } catch (e) {}
+  fetch(DOT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=UTF-8" }, body: payload, keepalive: true, mode: "no-cors" }).catch(function () {});
+}
+function reportPageView() { report("h5_page_view", { title: document.title }); }
+function reportGameStart(extra) { if (started) return; started = true; report("h5_game_start", extra || {}); }
+function reportRound(extra) { rounds += 1; report("h5_round_complete", Object.assign({ round: rounds }, extra || {})); }
+function reportComplete(extra) { if (completed) return; completed = true; report("h5_game_complete", extra || {}); }
+function reportShare(extra) { shared = true; report("h5_share_click", extra || {}); }
+function reportSummary() {
+  if (summarized) return;
+  summarized = true;
+  report("h5_session_summary", { dwell_ms: Date.now() - pageT0, rounds: rounds, completed: completed, shared: shared, started: started, miracles: got.filter(Boolean).length, weather: weather });
+}
+addEventListener("pagehide", reportSummary);
+
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+let W = 390, H = 520, SCALE = 90, yaw = 0.7, vel = 0, t = 0, last = performance.now();
+let weather = 0, houseLit = false, millBoost = false;
+const got = [false, false, false, false, false];
+const sheep = Array.from({ length: 5 }, function (_, i) {
+  return { x: Math.cos(i * 1.25) * 0.38, y: Math.sin(i * 1.25) * 0.32, a: i, hop: 0, hearts: 0 };
+});
+const petals = Array.from({ length: 28 }, function () { return { x: Math.random(), y: Math.random(), s: 0.4 + Math.random() * 0.8, v: 0.04 + Math.random() * 0.08, k: Math.random() * 6 }; });
+const spots = [];
+let dragging = false, moved = 0, lastX = 0, actx = null, bubbleTimer = 0;
+let view = Object.assign({}, WX[0]);
+
+function hexRgb(h) { return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)]; }
+function rgbHex(c) { return "#" + c.map(function (v) { return Math.max(0, Math.min(255, v | 0)).toString(16).padStart(2, "0"); }).join(""); }
+function mixHex(a, b, k) { const A = hexRgb(a), B = hexRgb(b); return rgbHex(A.map(function (v, i) { return v + (B[i] - v) * k; })); }
+function shade(hex, light) {
+  const c = hexRgb(hex);
+  return "rgb(" + c.map(function (v) { return Math.max(0, Math.min(255, v * light | 0)); }).join(",") + ")";
+}
+function P(x, y, z) {
+  const c = Math.cos(yaw), s = Math.sin(yaw);
+  const xr = x * c - y * s, yr = x * s + y * c;
+  return { x: W * 0.52 + (xr - yr) * 0.8660254 * SCALE, y: H * 0.58 + (xr + yr) * 0.5 * SCALE - z * SCALE, d: xr + yr };
+}
+function facing(nx, ny) {
+  const c = Math.cos(yaw), s = Math.sin(yaw);
+  return (nx * c - ny * s) + (nx * s + ny * c);
+}
+function fill(pts, color) {
+  ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  ctx.closePath(); ctx.fillStyle = color; ctx.fill();
+}
+function mark(id, x, y, z, rad) {
+  const p = P(x, y, z);
+  spots.push({ id: id, x: p.x, y: p.y, r: rad * (SCALE / 90), d: p.d });
+}
+function countGot() { return got.filter(Boolean).length; }
+function audio() {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!actx && AC) actx = new AC();
+  return actx;
+}
+function tone(freq, dur, type, gain, delay) {
+  const ac = audio(); if (!ac) return;
+  const o = ac.createOscillator(), g = ac.createGain();
+  const t0 = ac.currentTime + (delay || 0);
+  o.type = type || "sine"; o.frequency.setValueAtTime(freq, t0);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(gain || 0.06, t0 + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0 + dur + 0.02);
+}
+function baa() { tone(520, 0.12, "sine", 0.05); tone(340, 0.2, "triangle", 0.04, 0.08); }
+function chime() { [660, 880, 1175].forEach(function (f, i) { tone(f, 0.4, "sine", 0.05, i * 0.05); }); }
+
+function resize() {
+  const rect = canvas.getBoundingClientRect();
+  const r = Math.min(2, window.devicePixelRatio || 1);
+  canvas.width = Math.max(2, Math.floor(rect.width * r));
+  canvas.height = Math.max(2, Math.floor(rect.height * r));
+  ctx.setTransform(r, 0, 0, r, 0, 0);
+  W = rect.width; H = rect.height;
+  SCALE = Math.min(W * 0.28, H * 0.30);
+}
+function stepSheep(dt) {
+  const mx = -0.62, my = 0.38;
+  sheep.forEach(function (s, i) {
+    if (s.hop > 0) s.hop -= dt;
+    if (s.hearts > 0) s.hearts -= dt;
+    if (weather === 1) {
+      const dx = mx - s.x, dy = my - s.y, dist = Math.hypot(dx, dy) || 1;
+      if (dist > 0.22) { s.x += dx / dist * 0.22 * dt; s.y += dy / dist * 0.22 * dt; }
+    } else {
+      s.a += Math.sin(t * 0.6 + i) * dt * 0.8;
+      s.x += Math.cos(s.a) * 0.12 * dt;
+      s.y += Math.sin(s.a) * 0.12 * dt;
+      if (s.x * s.x + s.y * s.y > 0.62) s.a = Math.atan2(-s.y, -s.x);
+    }
+  });
+}
+function isoBox(x, y, z, w, d, h, col) {
+  const q = function (dx, dy, dz) { return P(x + dx, y + dy, z + dz); };
+  const A = q(-w, -d, 0), B = q(w, -d, 0), C = q(w, d, 0), D = q(-w, d, 0);
+  const E = q(-w, -d, h), F = q(w, -d, h), G = q(w, d, h), H = q(-w, d, h);
+  const faces = [
+    { pts: [A, B, F, E], color: shade(col, 0.86) },
+    { pts: [B, C, G, F], color: shade(col, 0.7) },
+    { pts: [C, D, H, G], color: shade(col, 0.94) },
+    { pts: [D, A, E, H], color: shade(col, 0.76) },
+    { pts: [E, F, G, H], color: shade(col, 1.08) }
+  ];
+  faces.forEach(function (f) { f.d = f.pts.reduce(function (s, p) { return s + p.d; }, 0) / 4; });
+  faces.sort(function (a, b) { return a.d - b.d; });
+  faces.forEach(function (f) { fill(f.pts, f.color); });
+}
+function drawCone() {
+  const top = P(0, 0, 0), bot = P(0, 0, -1.15);
+  const rx = 1.2 * SCALE * 1.45, ry = 1.2 * SCALE * 0.58;
+  const rx2 = 0.22 * SCALE * 1.45, ry2 = 0.22 * SCALE * 0.5;
+  ctx.beginPath();
+  ctx.moveTo(top.x - rx, top.y);
+  ctx.quadraticCurveTo(top.x, top.y + ry * 0.2, top.x + rx, top.y);
+  ctx.lineTo(bot.x + rx2, bot.y);
+  ctx.lineTo(bot.x - rx2, bot.y);
+  ctx.closePath();
+  const g = ctx.createLinearGradient(top.x, top.y, bot.x, bot.y);
+  g.addColorStop(0, shade(view.rock, 1.05));
+  g.addColorStop(1, shade(view.rock, 0.55));
+  ctx.fillStyle = g; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(bot.x, bot.y, rx2, ry2, 0, 0, 6.3);
+  ctx.fillStyle = shade(view.rock, 0.45); ctx.fill();
+  ctx.strokeStyle = "rgba(22,101,52,.85)"; ctx.lineWidth = 2;
+  for (let i = 0; i < 5; i++) {
+    const a = P(-0.4 + i * 0.18, 0.7, -0.05), b = P(-0.15 + i * 0.1, 0.35, -0.85);
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.quadraticCurveTo((a.x + b.x) / 2 + 8, (a.y + b.y) / 2, b.x, b.y); ctx.stroke();
+  }
+}
+function drawFalls() {
+  for (let i = 0; i < 8; i++) {
+    const z0 = -i / 8 * 0.95, z1 = -(i + 1) / 8 * 0.95;
+    const x = 1.02 - i * 0.07;
+    const a = P(x, -0.08, z0), b = P(x + 0.16, 0.08, z0), c = P(x + 0.1, 0.12, z1), d = P(x - 0.04, -0.02, z1);
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.lineTo(c.x, c.y); ctx.lineTo(d.x, d.y); ctx.closePath();
+    ctx.fillStyle = "rgba(186,230,253," + (0.45 + 0.2 * Math.sin(t * 7 + i)) + ")";
+    ctx.fill();
+  }
+  if (facing(1, 0) > 0.05) mark("fall", 0.95, 0.05, -0.3, 36);
+}
+function drawCave() {
+  const show = facing(-0.9, -0.3) > 0.15;
+  const p = P(-0.82, -0.2, -0.42);
+  if (!show) return;
+  ctx.beginPath(); ctx.ellipse(p.x, p.y, 16 + (got[4] ? 6 : 0), 12, 0, 0, 6.3);
+  ctx.fillStyle = got[4] ? "rgba(167,139,250,.95)" : "rgba(196,181,253,.75)";
+  ctx.fill();
+  if (got[4]) {
+    ctx.fillStyle = "#e9d5ff";
+    for (let i = 0; i < 5; i++) {
+      ctx.beginPath(); ctx.moveTo(p.x - 10 + i * 5, p.y + 6); ctx.lineTo(p.x - 8 + i * 5, p.y - 8 - (i % 2) * 6); ctx.lineTo(p.x - 4 + i * 5, p.y + 6); ctx.fill();
+    }
+  }
+  mark("cave", -0.82, -0.2, -0.42, 28);
+}
+function drawIslandTop() {
+  const p = P(0, 0, 0);
+  ctx.beginPath(); ctx.ellipse(p.x, p.y, 1.18 * SCALE * 1.45, 1.18 * SCALE * 0.58, 0, 0, 6.3);
+  const g = ctx.createLinearGradient(p.x, p.y - 40, p.x, p.y + 40);
+  g.addColorStop(0, view.grass2); g.addColorStop(1, view.grass);
+  ctx.fillStyle = g; ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,.35)"; ctx.stroke();
+}
+function drawStream() {
+  ctx.beginPath();
+  for (let i = 0; i <= 16; i++) {
+    const k = i / 16;
+    const x = -0.15 + k * 0.9, y = 0.15 + Math.sin(k * 3.1) * 0.12;
+    const p = P(x, y, 0.03);
+    if (i) ctx.lineTo(p.x, p.y); else ctx.moveTo(p.x, p.y);
+  }
+  ctx.strokeStyle = weather === 2 ? "rgba(186,230,253,.8)" : "rgba(56,189,248,.85)";
+  ctx.lineWidth = 7; ctx.lineCap = "round"; ctx.stroke();
+  if (weather === 1 || got[3]) {
+    for (let i = 0; i < 4; i++) {
+      const k = (t * 0.25 + i / 4) % 1;
+      const p = P(-0.15 + k * 0.9, 0.15 + Math.sin(k * 3.1) * 0.12, 0.05);
+      ctx.beginPath(); ctx.ellipse(p.x, p.y, 7, 3, 0, 0, 6.3);
+      ctx.strokeStyle = "rgba(255,255,255,.7)"; ctx.lineWidth = 1.2; ctx.stroke();
+    }
+  }
+  if (got[3]) {
+    for (let i = 0; i < 6; i++) {
+      const k = (t * 0.15 + i / 6) % 1;
+      const p = P(-0.1 + k * 0.8, 0.12, 0.08 + Math.sin(t * 3 + i) * 0.05);
+      ctx.fillStyle = "rgba(253,224,71,.9)";
+      ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, 6.3); ctx.fill();
+    }
+  }
+  mark("stream", 0.35, 0.2, 0.05, 30);
+}
+function drawBridge() {
+  isoBox(0.42, 0.32, 0, 0.16, 0.08, 0.08, "#d6d3d1");
+  isoBox(0.22, 0.22, 0, 0.16, 0.08, 0.08, "#e7e5e4");
+  if (weather === 3) {
+    const p = P(0.48, 0.36, 0.22);
+    ctx.fillStyle = "#fde68a";
+    ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, 6.3); ctx.fill();
+    ctx.fillStyle = "rgba(253,224,71,.25)";
+    ctx.beginPath(); ctx.arc(p.x, p.y, 14, 0, 6.3); ctx.fill();
+  }
+  mark("bridge", 0.32, 0.28, 0.1, 26);
+}
+function drawHouse() {
+  isoBox(-0.28, -0.08, 0, 0.22, 0.18, 0.32, "#f5f5f4");
+  const roof = [
+    P(-0.28 - 0.28, -0.08 - 0.24, 0.32),
+    P(-0.28 + 0.28, -0.08 - 0.24, 0.32),
+    P(-0.28 + 0.28, -0.08 + 0.24, 0.32),
+    P(-0.28 - 0.28, -0.08 + 0.24, 0.32),
+    P(-0.28, -0.08, 0.52)
+  ];
+  fill([roof[0], roof[1], roof[4]], weather === 2 ? "#f8fafc" : "#ef4444");
+  fill([roof[1], roof[2], roof[4]], weather === 2 ? "#e2e8f0" : "#b91c1c");
+  fill([roof[2], roof[3], roof[4]], weather === 2 ? "#f8fafc" : "#f87171");
+  fill([roof[3], roof[0], roof[4]], weather === 2 ? "#cbd5e1" : "#dc2626");
+  const win = P(-0.18, -0.22, 0.18);
+  const lit = houseLit || weather === 2 && got[2];
+  ctx.fillStyle = lit ? "#fb923c" : "#7dd3fc";
+  ctx.fillRect(win.x - 5, win.y - 4, 10, 8);
+  if (lit) {
+    ctx.fillStyle = "rgba(251,146,60,.28)";
+    ctx.beginPath(); ctx.arc(win.x, win.y, 12, 0, 6.3); ctx.fill();
+    for (let i = 0; i < 3; i++) {
+      const s = P(-0.28, -0.08, 0.55 + i * 0.08 + Math.sin(t * 2 + i) * 0.02);
+      ctx.globalAlpha = 0.35; ctx.fillStyle = "#e2e8f0";
+      ctx.beginPath(); ctx.arc(s.x + i * 3, s.y - i * 8, 4 + i, 0, 6.3); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
+  mark("house", -0.28, -0.08, 0.3, 34);
+}
+function drawMill() {
+  const hub = P(0.62, -0.48, 0.46);
+  isoBox(0.62, -0.48, 0, 0.08, 0.08, 0.42, "#d6d3d1");
+  const speed = (millBoost && weather === 0 ? 4.2 : 1.1);
+  const ang = t * speed;
+  ctx.save(); ctx.translate(hub.x, hub.y); ctx.rotate(ang);
+  for (let i = 0; i < 4; i++) {
+    ctx.rotate(Math.PI / 2);
+    ctx.fillStyle = i % 2 ? "#fef3c7" : "#fde68a";
+    ctx.fillRect(4, -4, 28, 8);
+  }
+  ctx.restore();
+  ctx.fillStyle = "#44403c";
+  ctx.beginPath(); ctx.arc(hub.x, hub.y, 4, 0, 6.3); ctx.fill();
+  mark("mill", 0.62, -0.48, 0.46, 32);
+}
+function drawMushroom() {
+  const stem = P(-0.62, 0.4, 0.16);
+  ctx.fillStyle = "#fef3c7";
+  ctx.beginPath(); ctx.ellipse(stem.x, stem.y + 8, 8, 16, 0, 0, 6.3); ctx.fill();
+  const cap = P(-0.62, 0.4, 0.34);
+  ctx.fillStyle = "#ef4444";
+  ctx.beginPath(); ctx.ellipse(cap.x, cap.y, 26, 14, 0, 0, 6.3); ctx.fill();
+  ctx.fillStyle = "#fff";
+  [[-8, -2], [6, 1], [0, 4]].forEach(function (o) {
+    ctx.beginPath(); ctx.ellipse(cap.x + o[0], cap.y + o[1], 3.5, 2, 0, 0, 6.3); ctx.fill();
+  });
+  mark("mushroom", -0.62, 0.4, 0.3, 28);
+}
+function drawPine(x, y) {
+  const base = P(x, y, 0);
+  ctx.fillStyle = "#78350f";
+  ctx.fillRect(base.x - 2, base.y - 8, 4, 12);
+  [[0.34, "#166534"], [0.24, "#15803d"], [0.14, "#22c55e"]].forEach(function (lv, i) {
+    const p = P(x, y, 0.16 + i * 0.16);
+    ctx.fillStyle = weather === 2 ? "#e2e8f0" : lv[1];
+    ctx.beginPath(); ctx.moveTo(p.x, p.y - 18); ctx.lineTo(p.x + 16 - i * 2, p.y + 8); ctx.lineTo(p.x - 16 + i * 2, p.y + 8); ctx.fill();
+    if (weather === 2) {
+      ctx.fillStyle = "#fff";
+      ctx.beginPath(); ctx.moveTo(p.x, p.y - 18); ctx.lineTo(p.x + 8, p.y - 4); ctx.lineTo(p.x - 8, p.y - 4); ctx.fill();
+    }
+  });
+}
+function drawCherry() {
+  if (weather !== 0) return;
+  const p = P(0.05, -0.72, 0.28);
+  ctx.fillStyle = "#9f1239";
+  ctx.fillRect(p.x - 2, p.y, 4, 18);
+  ctx.fillStyle = "rgba(251,207,232,.95)";
+  ctx.beginPath(); ctx.arc(p.x, p.y - 6, 16, 0, 6.3); ctx.fill();
+}
+function drawSheep(s) {
+  const bob = s.hop > 0 ? Math.sin((0.6 - s.hop) * 10) * 0.12 : Math.sin(t * 2 + s.x) * 0.02;
+  const p = P(s.x, s.y, 0.12 + bob);
+  ctx.fillStyle = "rgba(15,23,42,.12)";
+  ctx.beginPath(); ctx.ellipse(p.x, p.y + 10, 12, 4, 0, 0, 6.3); ctx.fill();
+  ctx.fillStyle = "#fff";
+  ctx.beginPath(); ctx.ellipse(p.x, p.y, 14, 9, 0, 0, 6.3); ctx.fill();
+  ctx.beginPath(); ctx.arc(p.x + 10, p.y - 4, 6, 0, 6.3); ctx.fill();
+  ctx.fillStyle = "#292524";
+  ctx.beginPath(); ctx.arc(p.x + 12, p.y - 5, 1.2, 0, 6.3); ctx.fill();
+  ctx.fillStyle = "rgba(244,114,182,.55)";
+  ctx.beginPath(); ctx.ellipse(p.x + 14, p.y - 2, 2, 1.2, 0, 0, 6.3); ctx.fill();
+  if (s.hearts > 0) {
+    ctx.globalAlpha = Math.min(1, s.hearts);
+    ctx.font = "14px sans-serif"; ctx.textAlign = "center";
+    ctx.fillText("♥", p.x, p.y - 16 - (1 - s.hearts) * 10);
+    ctx.globalAlpha = 1;
+  }
+  return p;
+}
+function drawSkyBits() {
+  if (weather === 2) {
+    ctx.globalAlpha = got[2] ? 0.85 : 0.45;
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath();
+      ctx.moveTo(0, 40 + i * 18);
+      for (let x = 0; x <= W; x += 12) ctx.lineTo(x, 40 + i * 18 + Math.sin(x * 0.02 + t * 0.8 + i) * 16);
+      ctx.lineTo(W, 90 + i * 24); ctx.lineTo(0, 90 + i * 24); ctx.closePath();
+      ctx.fillStyle = i % 2 ? "rgba(167,139,250,.35)" : "rgba(45,212,191,.28)";
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+  if (weather === 1 && got[1]) {
+    ["rgba(248,113,113,.75)", "rgba(250,204,21,.7)", "rgba(74,222,128,.7)", "rgba(96,165,250,.75)"].forEach(function (col, i) {
+      ctx.beginPath(); ctx.strokeStyle = col; ctx.lineWidth = 4;
+      ctx.arc(W * 0.5, H * 0.42, 70 + i * 8, Math.PI * 1.05, Math.PI * 1.95); ctx.stroke();
+      ctx.beginPath(); ctx.lineWidth = 2; ctx.globalAlpha = 0.7;
+      ctx.arc(W * 0.5, H * 0.42, 92 + i * 6, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke();
+      ctx.globalAlpha = 1;
+    });
+  }
+  const cloud = { x: W * 0.72, y: H * 0.16 };
+  ctx.fillStyle = weather === 2 ? "rgba(203,213,225,.3)" : "rgba(255,255,255,.9)";
+  ctx.beginPath(); ctx.ellipse(cloud.x, cloud.y, 36, 16, 0, 0, 6.3); ctx.ellipse(cloud.x + 24, cloud.y + 4, 26, 14, 0, 0, 6.3); ctx.fill();
+  spots.push({ id: "cloud", x: cloud.x, y: cloud.y, r: 40, d: 9 });
+  if (weather === 1) {
+    ctx.strokeStyle = "rgba(186,230,253,.65)"; ctx.lineWidth = 1;
+    for (let i = 0; i < 30; i++) {
+      const x = (i * 47 + t * 180) % W, y = (i * 89 + t * 320) % H;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 2, y + 12); ctx.stroke();
+    }
+  }
+  if (weather === 2) {
+    ctx.fillStyle = "#fff";
+    petals.forEach(function (p) {
+      ctx.globalAlpha = 0.85;
+      ctx.beginPath(); ctx.arc((p.x * W + Math.sin(t + p.k) * 8) % W, (p.y * H) % H, 1.6 + p.s, 0, 6.3); ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+  }
+  if (weather === 0) {
+    petals.forEach(function (p) {
+      ctx.fillStyle = "rgba(251,207,232,.9)";
+      ctx.beginPath(); ctx.ellipse((p.x * W) % W, (p.y * H) % H, 3, 2, p.k, 0, 6.3); ctx.fill();
+    });
+    for (let i = 0; i < 3; i++) {
+      const x = W * (0.2 + i * 0.25) + Math.sin(t * 1.4 + i) * 20;
+      const y = H * 0.28 + Math.cos(t * 1.1 + i) * 16;
+      ctx.font = "14px sans-serif"; ctx.fillText("🦋", x, y);
+    }
+  }
+  if (weather === 3) {
+    for (let i = 0; i < 16; i++) {
+      const x = (Math.sin(t * 0.6 + i) * 0.5 + 0.5) * W;
+      const y = H * 0.35 + ((i * 37 + t * 20) % (H * 0.45));
+      ctx.fillStyle = "rgba(253,224,71," + (0.4 + 0.5 * Math.sin(t * 4 + i)) + ")";
+      ctx.beginPath(); ctx.arc(x, y, 2.2, 0, 6.3); ctx.fill();
+    }
+  }
+}
+function draw() {
+  const tgt = WX[weather];
+  ["sky0", "sky1", "grass", "grass2", "rock"].forEach(function (k) { view[k] = mixHex(view[k], tgt[k], 0.08); });
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, view.sky0); bg.addColorStop(1, view.sky1);
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  document.body.style.background = view.sky0;
+  const lum = hexRgb(view.sky0).reduce(function (s, v, i) { return s + v * [0.2126, 0.7152, 0.0722][i]; }, 0) / 255;
+  document.body.style.color = lum < 0.45 ? "#f8fafc" : "#1e293b";
+  spots.length = 0;
+  drawSkyBits();
+  ctx.save();
+  ctx.translate(W * 0.52, H * 0.72); ctx.scale(1, 0.28);
+  ctx.fillStyle = "rgba(15,23,42,.16)"; ctx.beginPath(); ctx.arc(0, 0, SCALE * 1.7, 0, 6.3); ctx.fill();
+  ctx.restore();
+  drawCone();
+  drawFalls();
+  drawIslandTop();
+  drawCave();
+  drawStream();
+  const props = [];
+  props.push({ d: P(0.32, 0.28, 0).d, fn: drawBridge });
+  props.push({ d: P(-0.28, -0.08, 0).d, fn: drawHouse });
+  props.push({ d: P(0.62, -0.48, 0).d, fn: drawMill });
+  props.push({ d: P(-0.62, 0.4, 0).d, fn: drawMushroom });
+  props.push({ d: P(-0.85, 0.15, 0).d, fn: function () { drawPine(-0.85, 0.15); } });
+  props.push({ d: P(0.78, 0.25, 0).d, fn: function () { drawPine(0.78, 0.25); } });
+  props.push({ d: P(0.05, -0.72, 0).d, fn: drawCherry });
+  sheep.forEach(function (s, i) {
+    props.push({ d: P(s.x, s.y, 0).d + 0.02, fn: function () {
+      drawSheep(s);
+      mark("sheep" + i, s.x, s.y, 0.15, 22);
+    } });
+  });
+  props.sort(function (a, b) { return a.d - b.d; });
+  props.forEach(function (p) { p.fn(); });
+}
+function frame(now) {
+  const dt = Math.min(0.033, (now - last) / 1000); last = now; t += dt;
+  if (!dragging) { yaw += vel; vel *= Math.exp(-3 * dt); }
+  stepSheep(dt);
+  petals.forEach(function (p) { p.y += p.v * dt; if (p.y > 1) p.y = 0; p.x += Math.sin(t + p.k) * 0.002; });
+  draw();
+  requestAnimationFrame(frame);
+}
+function showBubble(text) {
+  const b = document.getElementById("bubble");
+  b.textContent = text; b.classList.add("on");
+  clearTimeout(bubbleTimer);
+  bubbleTimer = setTimeout(function () { b.classList.remove("on"); }, 1800);
+}
+function foundMiracle(i) {
+  if (got[i]) return;
+  got[i] = true;
+  chime();
+  showBubble(T().found[i]);
+  reportRound({ miracle: i + 1, n: countGot() });
+  syncHud();
+  if (countGot() === 5) {
+    reportComplete({ n: 5 });
+    setTimeout(openCert, 600);
+  }
+}
+function tapSpot(id) {
+  reportGameStart({ via: id });
+  audio();
+  if (id.indexOf("sheep") === 0) {
+    const s = sheep[Number(id.slice(5))];
+    s.hop = 0.6; s.hearts = 1.1; baa();
+    showBubble(T().baa);
+    return;
+  }
+  if (id === "mill") {
+    if (weather === 0) { millBoost = true; foundMiracle(0); }
+    else showBubble(T().need);
+    return;
+  }
+  if (id === "cloud" || id === "mushroom") {
+    if (weather === 1) foundMiracle(1);
+    else showBubble(T().need);
+    return;
+  }
+  if (id === "house") {
+    houseLit = !houseLit;
+    if (weather === 2 && houseLit) foundMiracle(2);
+    else if (weather !== 2) showBubble(T().need);
+    syncHud();
+    return;
+  }
+  if (id === "stream" || id === "bridge") {
+    if (weather === 3) foundMiracle(3);
+    else showBubble(T().need);
+    return;
+  }
+  if (id === "cave") { foundMiracle(4); return; }
+  if (id === "fall") showBubble(T().behind);
+}
+function setWeather(i) {
+  reportGameStart({ via: "weather" });
+  weather = i;
+  if (i === 2 && houseLit) foundMiracle(2);
+  if (i === 0 && millBoost) foundMiracle(0);
+  syncHud();
+}
+function syncHud() {
+  const tI = T();
+  document.documentElement.lang = lang;
+  const pt = document.getElementById("pageTitle");
+  if (pt) pt.textContent = tI.title;
+  document.getElementById("sec").textContent = tI.sec + " " + countGot() + "/5";
+  const next = got.findIndex(function (v) { return !v; });
+  document.getElementById("hint").textContent = next < 0 ? tI.done : tI.goals[next];
+  document.getElementById("wxname").textContent = tI.wx[weather];
+  document.querySelectorAll(".langs button").forEach(function (b) { b.classList.toggle("on", b.dataset.l === lang); });
+  document.querySelectorAll("#wx button").forEach(function (b, i) { b.classList.toggle("on", i === weather); });
+  const lum = hexRgb(view.sky0).reduce(function (s, v, i) { return s + v * [0.2126, 0.7152, 0.0722][i]; }, 0) / 255;
+  document.getElementById("pageTitle").style.color = lum < 0.45 ? "#f8fafc" : "#1e293b";
+  document.getElementById("pageTitle").style.background = lum < 0.45 ? "rgba(15,23,42,.55)" : "rgba(255,255,255,.82)";
+}
+function fillCert() {
+  const tI = T();
+  document.getElementById("certK").textContent = tI.certK;
+  document.getElementById("certT").textContent = tI.certT;
+  document.getElementById("certList").innerHTML = tI.names.map(function (n) { return "<li>✦ " + n + "</li>"; }).join("");
+  document.getElementById("certSub").textContent = tI.certSub;
+  document.getElementById("copyBtn").textContent = tI.copy;
+  document.getElementById("closeBtn").textContent = tI.close;
+}
+function openCert() { fillCert(); document.getElementById("cert").classList.add("on"); }
+function goLang(code) {
+  if (code === lang) return;
+  const path = location.pathname.replace(/index\.html$/, "");
+  if (/\/(fr|es|de|en)\/$/.test(path)) location.href = path.replace(/\/(fr|es|de|en)\/$/, "/" + code + "/");
+  else location.href = path.replace(/\/?$/, "/") + code + "/";
+}
+document.getElementById("wx").innerHTML = T().wx.map(function (name, i) {
+  return '<button type="button" data-i="' + i + '">' + name + "</button>";
+}).join("");
+document.querySelectorAll("#wx button").forEach(function (b) { b.onclick = function () { setWeather(Number(b.dataset.i)); }; });
+document.querySelectorAll(".langs button").forEach(function (b) { b.onclick = function () { goLang(b.dataset.l); }; });
+canvas.addEventListener("pointerdown", function (e) {
+  dragging = true; moved = 0; lastX = e.clientX; vel = 0;
+  try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+  audio();
+});
+canvas.addEventListener("pointermove", function (e) {
+  if (!dragging) return;
+  const dx = e.clientX - lastX; lastX = e.clientX; moved += Math.abs(dx);
+  yaw += dx * 0.012; vel = dx * 0.012;
+});
+canvas.addEventListener("pointerup", function (e) {
+  dragging = false;
+  if (moved > 8) { reportGameStart({ via: "spin" }); return; }
+  const r = canvas.getBoundingClientRect();
+  const x = e.clientX - r.left, y = e.clientY - r.top;
+  let best = null, bd = 1e9;
+  spots.forEach(function (s) {
+    const d = Math.hypot(s.x - x, s.y - y);
+    if (d < s.r && d < bd) { bd = d; best = s; }
+  });
+  if (best) tapSpot(best.id);
+});
+canvas.addEventListener("pointercancel", function () { dragging = false; });
+document.getElementById("copyBtn").onclick = async function () {
+  reportShare({ miracles: 5 });
+  const text = T().share;
+  try { await navigator.clipboard.writeText(text); }
+  catch (err) {
+    const ta = document.createElement("textarea");
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand("copy"); ta.remove();
+  }
+  document.getElementById("copyBtn").textContent = T().copied;
+};
+document.getElementById("closeBtn").onclick = function () { document.getElementById("cert").classList.remove("on"); };
+document.getElementById("cert").addEventListener("click", function (e) { if (e.target.id === "cert") e.currentTarget.classList.remove("on"); });
+resize();
+window.addEventListener("resize", resize);
+syncHud();
+reportPageView();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

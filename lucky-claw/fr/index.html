@@ -1,0 +1,755 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>🧸 Lucky Club : Machine à Pince 3D Pastel — Attrape la Capsule Dorée SSR !</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Play Capsule">
+<meta property="og:title" content="🧸 Lucky Club : Machine à Pince 3D Pastel — Attrape la Capsule Dorée SSR !">
+<meta property="og:description" content="3 pièces gratuites, 14 capsules pastel et une figurine SSR dorée. Change la couleur macaron et copie ton ticket.">
+<meta name="description" content="3 pièces gratuites, 14 capsules pastel et une figurine SSR dorée. Change la couleur macaron et copie ton ticket.">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;background:#FBF7F2;color:#44403c}
+  button{font-family:inherit}
+  .app{height:100dvh;max-width:480px;margin:0 auto;display:flex;flex-direction:column;padding:8px 10px calc(8px + env(safe-area-inset-bottom));gap:6px;--accent:#F9A8D4}
+  .top-title{font-size:13px;font-weight:900;line-height:1.25;letter-spacing:-.01em;text-align:center;border-radius:12px;padding:7px 10px;background:#fff;border:1px solid rgba(120,80,60,.08);box-shadow:0 6px 16px rgba(120,80,60,.06);color:#44403c}
+  .hud{display:flex;align-items:center;gap:8px}
+  .langs{display:flex;gap:4px}
+  .langs button{background:#fff;border:1px solid rgba(120,80,60,.16);color:#57534e;border-radius:99px;padding:3px 8px;font-size:11px;font-weight:800;cursor:pointer}
+  .langs button.on{background:#44403c;color:#fff;border-color:#44403c}
+  .coins{margin-left:auto;font-weight:900;font-size:13px;background:#fff;border-radius:99px;padding:4px 10px;border:1px solid rgba(120,80,60,.1)}
+  .stage{flex:1;min-height:0;position:relative}
+  canvas{width:100%;height:100%;display:block;touch-action:none}
+  .controls{position:absolute;left:4px;top:16%;display:flex;flex-direction:column;gap:8px;background:linear-gradient(#e7e5e4,#a8a29e);padding:10px 8px;border-radius:20px;box-shadow:inset 0 1px 0 #fff,0 8px 16px rgba(80,60,40,.16);z-index:2}
+  .key{width:52px;height:46px;border:0;border-radius:12px;background:linear-gradient(#fff,#e7e5e4);color:#44403c;font-weight:900;font-size:18px;cursor:pointer;box-shadow:0 4px 0 #78716c,0 8px 12px rgba(0,0,0,.12);transform:translateY(0);transition:transform .05s,box-shadow .05s}
+  .key:active{transform:translateY(4px);box-shadow:0 0 0 #78716c,0 3px 6px rgba(0,0,0,.12)}
+  .key.drop{height:74px;font-size:12px;line-height:1.15;background:linear-gradient(180,#fff,var(--accent));color:#3f2a22}
+  .skins{display:flex;flex-direction:column;align-items:center;gap:4px}
+  .dots{display:flex;gap:10px}
+  .dot{width:34px;height:34px;border-radius:50%;border:2px solid transparent;font-size:16px;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.12);padding:0}
+  .dot.on{transform:scale(1.12);border-color:#fff;box-shadow:0 0 0 2px rgba(68,64,60,.45)}
+  .tname{font-size:11px;font-weight:800;min-height:14px}
+  .hint{font-size:11px;font-weight:700;opacity:.75;text-align:center;min-height:14px}
+  .bubble{position:absolute;left:70px;right:12px;top:12px;background:rgba(255,255,255,.94);border-radius:14px;padding:8px 10px;font-size:12.5px;font-weight:800;line-height:1.3;opacity:0;transform:translateY(6px);pointer-events:none;transition:.25s;box-shadow:0 10px 30px rgba(80,60,40,.16);z-index:3}
+  .bubble.on{opacity:1;transform:none}
+  .cert{position:absolute;inset:0;background:rgba(68,64,60,.35);display:none;align-items:center;justify-content:center;padding:16px;z-index:5}
+  .cert.on{display:flex}
+  .paper{width:min(100%,320px);background:#fffef8;color:#292524;border-radius:4px 4px 14px 14px;padding:14px 14px 12px;box-shadow:0 20px 50px rgba(0,0,0,.28);font-family:ui-monospace,"SF Mono",Menlo,monospace;position:relative}
+  .paper:before{content:"";position:absolute;left:0;right:0;top:-7px;height:10px;background:radial-gradient(circle at 8px 10px,#FBF7F2 7px,transparent 8px) left center/16px 12px repeat-x}
+  .paper small{letter-spacing:.14em;font-weight:800;color:#a16207;font-size:10px}
+  .paper h2{margin:4px 0 6px;font-size:16px;line-height:1.25;font-family:-apple-system,sans-serif}
+  .paper ul{margin:6px 0;padding:8px 0;list-style:none;font-size:12px;font-weight:700;border-top:1px dashed #d6d3d1;border-bottom:1px dashed #d6d3d1}
+  .paper li{padding:3px 0}
+  .paper p{margin:6px 0 10px;font-size:12px;font-weight:650;font-family:-apple-system,sans-serif}
+  .paper .copy{width:100%;border:0;border-radius:12px;padding:11px;font-weight:900;background:linear-gradient(90deg,#F9A8D4,#FDE047);color:#44403c;cursor:pointer;font-family:-apple-system,sans-serif}
+  .paper .close{width:100%;margin-top:6px;border:0;background:transparent;font-weight:800;color:#78716c;padding:6px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="top-title" id="pageTitle">🧸 Lucky Club : Machine à Pince 3D Pastel — Attrape la Capsule Dorée SSR !</div>
+  <div class="hud">
+    <div class="langs">
+      <button data-l="fr" type="button">FR</button>
+      <button data-l="es" type="button">ES</button>
+      <button data-l="de" type="button">DE</button>
+      <button data-l="en" type="button">EN</button>
+    </div>
+    <div class="coins" id="coins">🪙 3</div>
+  </div>
+  <div class="stage">
+    <canvas id="c"></canvas>
+    <div class="controls">
+      <button class="key" id="left" type="button" aria-label="left">◀</button>
+      <button class="key" id="right" type="button" aria-label="right">▶</button>
+      <button class="key drop" id="drop" type="button">⬇<br>DROP<br>GRAB</button>
+    </div>
+    <div class="bubble" id="bubble"></div>
+    <div class="cert" id="cert">
+      <div class="paper">
+        <small id="certK"></small>
+        <h2 id="certT"></h2>
+        <ul id="certList"></ul>
+        <p id="certSub"></p>
+        <button class="copy" id="copyBtn" type="button"></button>
+        <button class="close" id="closeBtn" type="button"></button>
+      </div>
+    </div>
+  </div>
+  <div class="hint" id="hint"></div>
+  <div class="skins">
+    <div class="tname" id="tname"></div>
+    <div class="dots" id="dots"></div>
+  </div>
+</div>
+<script>
+const DEFAULT_LANG = "fr";
+const GAME = "lucky_claw";
+const params = new URLSearchParams(location.search);
+let lang = (params.get("lang") || DEFAULT_LANG).toLowerCase().slice(0, 2);
+const I18N = {
+  fr: {
+    title: "🧸 Lucky Club : Machine à Pince 3D Pastel — Attrape la Capsule Dorée SSR !",
+    coins: "Pièces",
+    hint: "Glisse sur la vitre pour viser · ⬇ pour descendre la pince",
+    skins: ["🌸 Rose Macaron","🌿 Menthe Crème","💜 Lavande Lait","🍋 Citron Beurre","🍑 Pêche Soda"],
+    figs: {
+      bear: "👑 SSR · Ours Macaron Doré (0.8%)",
+      bunny: "🐰 Lapin Perle Rose",
+      cat: "🐱 Chaton Nuage Menthe",
+      dino: "🦕 Dino Gelée Citron",
+      fox: "🦊 Renard Étoile Lavande",
+      uni: "🦄 Licorne Cristal"
+    },
+    got: "La coque claque — une figurine !",
+    certK: "LUCKY CLUB · TICKET THERMIQUE",
+    certT: "Collectionneur de figurines",
+    certSub: "3/3 capsules ouvertes. La pince pastel a tout gardé.",
+    copy: "📋 Copier mon ticket",
+    copied: "✅ Copié · colle-le en commentaire",
+    close: "Retourner à la machine",
+    share: "🧸 Lucky Club · ticket collectionneur\n3/3 figurines pastel sorties de la pince.\nLa capsule dorée SSR était dans le tas."
+  },
+  es: {
+    title: "🧸 Lucky Club : Máquina de Gancho 3D Pastel — ¡Atrapa la Cápsula Dorada SSR!",
+    coins: "Monedas",
+    hint: "Desliza el cristal para apuntar · ⬇ baja la garra",
+    skins: ["🌸 Rose Macaron","🌿 Menthe Crème","💜 Lavande Lait","🍋 Citron Beurre","🍑 Pêche Soda"],
+    figs: {
+      bear: "👑 SSR · Oso Macaron Dorado (0.8%)",
+      bunny: "🐰 Conejo Perla Rosa",
+      cat: "🐱 Gatito Nube Menta",
+      dino: "🦕 Dino Gelatina Limón",
+      fox: "🦊 Zorro Estrella Lavanda",
+      uni: "🦄 Unicornio Cristal"
+    },
+    got: "La cáscara hace ¡clac! — una figura.",
+    certK: "LUCKY CLUB · TICKET TÉRMICO",
+    certT: "Coleccionista de figuras",
+    certSub: "3/3 cápsulas abiertas. La garra pastel lo guardó todo.",
+    copy: "📋 Copiar mi ticket",
+    copied: "✅ Copiado · pégalo en comentarios",
+    close: "Volver a la máquina",
+    share: "🧸 Lucky Club · ticket coleccionista\n3/3 figuras pastel salieron de la garra.\nLa cápsula dorada SSR estaba en el montón."
+  },
+  de: {
+    title: "🧸 Lucky Club : Pastell 3D Greifautomat — Schnapp dir die Goldene SSR-Kapsel!",
+    coins: "Münzen",
+    hint: "Über das Glas wischen · ⬇ senkt die Greifzange",
+    skins: ["🌸 Rose Macaron","🌿 Menthe Crème","💜 Lavande Lait","🍋 Citron Beurre","🍑 Pêche Soda"],
+    figs: {
+      bear: "👑 SSR · Goldener Macaron-Bär (0.8%)",
+      bunny: "🐰 Rosa Perlenhase",
+      cat: "🐱 Minz-Wolken-Kätzchen",
+      dino: "🦕 Zitronen-Gelee-Dino",
+      fox: "🦊 Lavendel-Stern-Fuchs",
+      uni: "🦄 Kristall-Einhorn"
+    },
+    got: "Die Schale knackt — eine Figur!",
+    certK: "LUCKY CLUB · THERMOBON",
+    certT: "Figuren-Sammler",
+    certSub: "3/3 Kapseln offen. Die Pastell-Zange hat alles behalten.",
+    copy: "📋 Bon kopieren",
+    copied: "✅ Kopiert · ab in die Kommentare",
+    close: "Zurück zum Automaten",
+    share: "🧸 Lucky Club · Sammlerbon\n3/3 Pastell-Figuren aus der Zange.\nDie goldene SSR-Kapsel lag im Haufen."
+  },
+  en: {
+    title: "🧸 Lucky Club : Pastel 3D Claw Machine — Grab the Golden SSR Capsule!",
+    coins: "Coins",
+    hint: "Swipe the glass to aim · ⬇ drops the claw",
+    skins: ["🌸 Rose Macaron","🌿 Menthe Crème","💜 Lavande Lait","🍋 Citron Beurre","🍑 Pêche Soda"],
+    figs: {
+      bear: "👑 SSR · Golden Macaron Bear (0.8%)",
+      bunny: "🐰 Rose Pearl Bunny",
+      cat: "🐱 Mint Cloud Kitten",
+      dino: "🦕 Lemon Jelly Dino",
+      fox: "🦊 Lavender Star Fox",
+      uni: "🦄 Crystal Unicorn"
+    },
+    got: "The shell pops — a tiny figure!",
+    certK: "LUCKY CLUB · THERMAL TICKET",
+    certT: "Figurine collector",
+    certSub: "3/3 capsules opened. The pastel claw kept every one.",
+    copy: "📋 Copy my ticket",
+    copied: "✅ Copied · paste it in the comments",
+    close: "Back to the machine",
+    share: "🧸 Lucky Club · collector ticket\n3/3 pastel figures out of the claw.\nThe golden SSR capsule was in the pile."
+  }
+};
+if (!I18N[lang]) lang = "fr";
+const T = () => I18N[lang];
+const SKINS = [
+  {hex:"#F9A8D4"},
+  {hex:"#6EE7B7"},
+  {hex:"#C4B5FD"},
+  {hex:"#FDE047"},
+  {hex:"#FDBA74"}
+];
+const FIG_IDS = ["bear","bunny","cat","dino","fox","uni"];
+
+const DOT_URL = "https://dot.hacoo.app/api/v2/dotRecords";
+const pageT0 = Date.now();
+const pageId = (Math.random().toString(16).slice(2) + pageT0.toString(16)).slice(0, 24);
+let started = false, rounds = 0, completed = false, shared = false, summarized = false;
+function sid() {
+  try {
+    let id = localStorage.getItem("pc_sid");
+    if (!id) { id = (crypto.randomUUID && crypto.randomUUID()) || String(Math.random()).slice(2); localStorage.setItem("pc_sid", id); }
+    return id;
+  } catch (e) { return "anon"; }
+}
+function report(aid, extra) {
+  const ts = Date.now();
+  const apar = Object.assign({ game: GAME, lang: lang, page: location.pathname }, extra || {});
+  const payload = JSON.stringify({ data: [{
+    what: "user_trace", who: "client", when: ts, platform: "h5", app: "saramart",
+    context: { app: "saramart", platform: "h5", game: GAME, lang: lang, uuid: sid(), page: location.pathname },
+    data: { type: "event", aid: aid, event_ts: ts, page_create_ts: pageT0, page_id: pageId, page_url: location.href, apar: JSON.stringify(apar) }
+  }] });
+  try {
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(DOT_URL, new Blob([payload], { type: "text/plain;charset=UTF-8" }));
+      return;
+    }
+  } catch (e) {}
+  fetch(DOT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=UTF-8" }, body: payload, keepalive: true, mode: "no-cors" }).catch(function () {});
+}
+function reportPageView() { report("h5_page_view", { title: document.title }); }
+function reportGameStart(extra) { if (started) return; started = true; report("h5_game_start", extra || {}); }
+function reportRound(extra) { rounds += 1; report("h5_round_complete", Object.assign({ round: rounds }, extra || {})); }
+function reportComplete(extra) { if (completed) return; completed = true; report("h5_game_complete", extra || {}); }
+function reportShare(extra) { shared = true; report("h5_share_click", extra || {}); }
+function reportSummary() {
+  if (summarized) return;
+  summarized = true;
+  report("h5_session_summary", { dwell_ms: Date.now() - pageT0, rounds: rounds, completed: completed, shared: shared, started: started, coins_left: coins, prizes: prizes.map(function (p) { return p.id; }).join(",") });
+}
+addEventListener("pagehide", reportSummary);
+
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+let W = 390, H = 560, machine = null, glass = null, spawned = false;
+let skin = 0, coins = 3, aimNX = 0.48, clawNX = 0.48, clawY = 0, clawOpen = 1;
+let mode = "idle", modeT = 0, held = null, popT = 0, popPrize = null;
+const prizes = [];
+const balls = [];
+const confetti = [];
+let t = 0, last = performance.now();
+let actx = null, bubbleTimer = 0;
+let drag = null;
+
+function hexRgb(h) { return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)]; }
+function shade(hex, light) {
+  const c = hexRgb(hex);
+  const R = Math.max(0, Math.min(255, c[0] * light | 0));
+  const G = Math.max(0, Math.min(255, c[1] * light | 0));
+  const B = Math.max(0, Math.min(255, c[2] * light | 0));
+  return "rgb(" + R + "," + G + "," + B + ")";
+}
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+function audio() {
+  if (actx) return actx;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return null;
+  actx = new AC();
+  return actx;
+}
+function tone(freq, dur, type, gain) {
+  const ac = audio(); if (!ac) return;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = type || "sine";
+  o.frequency.setValueAtTime(freq, ac.currentTime);
+  g.gain.setValueAtTime(gain || 0.05, ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + dur);
+  o.connect(g); g.connect(ac.destination);
+  o.start(); o.stop(ac.currentTime + dur);
+}
+function ratchet() {
+  const ac = audio(); if (!ac) return;
+  for (let i = 0; i < 7; i++) {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = "square";
+    o.frequency.value = 90 + i * 28;
+    const t0 = ac.currentTime + i * 0.032;
+    g.gain.setValueAtTime(0.035, t0);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.03);
+    o.connect(g); g.connect(ac.destination);
+    o.start(t0); o.stop(t0 + 0.034);
+  }
+  tone(160, 0.2, "sawtooth", 0.03);
+}
+function popSound() {
+  tone(620, 0.18, "triangle", 0.07);
+  tone(880, 0.22, "sine", 0.05);
+  if (navigator.vibrate) navigator.vibrate(18);
+}
+
+function resize() {
+  const rect = canvas.getBoundingClientRect();
+  const r = Math.min(2, window.devicePixelRatio || 1);
+  canvas.width = Math.max(2, Math.floor(rect.width * r));
+  canvas.height = Math.max(2, Math.floor(rect.height * r));
+  ctx.setTransform(r, 0, 0, r, 0, 0);
+  const prev = glass;
+  W = rect.width; H = rect.height;
+  const padL = 70;
+  const mw = Math.min(W - padL - 10, 360);
+  const mh = Math.min(H - 6, 560);
+  const x = padL + Math.max(0, (W - padL - mw) / 2);
+  const y = Math.max(0, (H - mh) / 2);
+  machine = { x: x, y: y, w: mw, h: mh };
+  glass = { x: x + mw * 0.14, y: y + mh * 0.18, w: mw * 0.72, h: mh * 0.50 };
+  if (!spawned) { spawn(); spawned = true; }
+  else if (prev && (Math.abs(prev.w - glass.w) > 1 || Math.abs(prev.h - glass.h) > 1)) {
+    balls.forEach(function (b) {
+      const nx = (b.x - prev.x) / prev.w, ny = (b.y - prev.y) / prev.h;
+      b.r *= glass.w / prev.w;
+      b.x = glass.x + nx * glass.w;
+      b.y = glass.y + ny * glass.h;
+    });
+  }
+}
+function spawn() {
+  const cols = ["#F9A8D4", "#6EE7B7", "#C4B5FD", "#FDE047", "#FDBA74", "#93C5FD", "#FDA4AF", "#A7F3D0", "#FBCFE8", "#FDE68A", "#99F6E4"];
+  const ssrAt = { 2: 1, 7: 1, 11: 1 };
+  for (let i = 0; i < 14; i++) {
+    const ssr = !!ssrAt[i];
+    const col = (i % 4);
+    balls.push({
+      x: glass.x + 22 + (col / 4) * (glass.w - 36) + Math.random() * 10,
+      y: glass.y + 36 + (i % 5) * 12,
+      vx: (Math.random() - 0.5) * 30,
+      vy: 0,
+      r: (ssr ? 15 : 13) * (glass.w / 230),
+      color: ssr ? "#F5C542" : cols[i % cols.length],
+      ssr: ssr,
+      gone: false,
+      held: false
+    });
+  }
+}
+function liveBalls() { return balls.filter(function (b) { return !b.gone && !b.held; }); }
+function stepBalls(dt) {
+  const floor = glass.y + glass.h - 10;
+  balls.forEach(function (b) {
+    if (b.gone || b.held) return;
+    b.vy += 1400 * dt;
+    b.x += b.vx * dt;
+    b.y += b.vy * dt;
+    b.vx *= 0.992;
+    if (b.x < glass.x + b.r) { b.x = glass.x + b.r; b.vx = Math.abs(b.vx) * 0.45; }
+    if (b.x > glass.x + glass.w - b.r) { b.x = glass.x + glass.w - b.r; b.vx = -Math.abs(b.vx) * 0.45; }
+    if (b.y > floor - b.r) { b.y = floor - b.r; b.vy *= -0.32; b.vx *= 0.84; if (Math.abs(b.vy) < 30) b.vy = 0; }
+    if (b.y < glass.y + b.r + 26) { b.y = glass.y + b.r + 26; b.vy = Math.abs(b.vy) * 0.2; }
+  });
+  for (let i = 0; i < balls.length; i++) {
+    for (let j = i + 1; j < balls.length; j++) {
+      const a = balls[i], b = balls[j];
+      if (a.gone || b.gone || a.held || b.held) continue;
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const dist = Math.hypot(dx, dy) || 0.001;
+      const min = a.r + b.r;
+      if (dist < min) {
+        const nx = dx / dist, ny = dy / dist, pen = (min - dist) * 0.5;
+        a.x -= nx * pen; a.y -= ny * pen;
+        b.x += nx * pen; b.y += ny * pen;
+        const rel = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+        if (rel < 0) {
+          const imp = rel * 0.45;
+          a.vx += nx * imp; a.vy += ny * imp;
+          b.vx -= nx * imp; b.vy -= ny * imp;
+        }
+      }
+    }
+  }
+}
+function clawPixel() { return glass.x + clawNX * glass.w; }
+function clawTip() { return glass.y + 28 + clawY * (glass.h * 0.62); }
+function nearestBall() {
+  const cx = clawPixel();
+  let best = null, score = 1e9;
+  liveBalls().forEach(function (b) {
+    const s = Math.abs(b.x - cx) * 1.2 + Math.max(0, clawTip() - b.y) * 0.15;
+    if (s < score) { score = s; best = b; }
+  });
+  return best;
+}
+function award(ball) {
+  let id = "bunny";
+  if (ball.ssr) id = "bear";
+  else {
+    const pool = ["bunny", "cat", "dino", "fox", "uni"].filter(function (k) { return !prizes.some(function (p) { return p.id === k; }); });
+    id = pool.length ? pool[Math.floor(Math.random() * pool.length)] : "cat";
+  }
+  const prize = { id: id, ssr: !!ball.ssr };
+  prizes.push(prize);
+  popPrize = prize;
+  popT = 0;
+  burst(ball.color);
+  popSound();
+  showBubble(T().got);
+  reportRound({ prize: id, ssr: prize.ssr ? 1 : 0, n: prizes.length });
+  if (prizes.length >= 3) reportComplete({ prizes: prizes.map(function (p) { return p.id; }).join(","), ssr: prizes.some(function (p) { return p.ssr; }) ? 1 : 0 });
+}
+function burst(color) {
+  const cols = [color, "#fff", SKINS[skin].hex, "#FDE047", "#F9A8D4"];
+  for (let i = 0; i < 36; i++) {
+    const a = Math.random() * 6.28, sp = 80 + Math.random() * 220;
+    confetti.push({ x: clawPixel(), y: clawTip(), vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 80, life: 1, color: cols[i % cols.length], rot: Math.random() * 6 });
+  }
+}
+function beginDrop() {
+  if (mode !== "idle") return;
+  reportGameStart({ via: "drop" });
+  if (coins <= 0) { openCert(); return; }
+  coins -= 1;
+  mode = "down"; modeT = 0;
+  audio();
+  syncHud();
+}
+function nudge(dir) {
+  reportGameStart({ via: "nudge" });
+  if (mode !== "idle") return;
+  aimNX = clamp(aimNX + dir * 0.07, 0.1, 0.9);
+}
+function stepMode(dt) {
+  modeT += dt;
+  if (mode === "idle") {
+    clawNX += (aimNX - clawNX) * Math.min(1, dt * 8);
+    clawY = 0; clawOpen = 1;
+  } else if (mode === "down") {
+    clawY = Math.min(1, modeT / 0.55);
+    if (clawY >= 1) { mode = "close"; modeT = 0; ratchet(); }
+  } else if (mode === "close") {
+    clawOpen = 1 - Math.min(1, modeT / 0.28);
+    if (modeT >= 0.28) {
+      held = nearestBall();
+      if (held) held.held = true;
+      mode = "up"; modeT = 0;
+    }
+  } else if (mode === "up") {
+    clawY = 1 - Math.min(1, modeT / 0.48);
+    if (held) { held.x = clawPixel(); held.y = clawTip() + 16; held.vx = 0; held.vy = 0; }
+    if (modeT >= 0.48) { mode = "tochute"; modeT = 0; }
+  } else if (mode === "tochute") {
+    const target = 0.86;
+    clawNX += (target - clawNX) * Math.min(1, dt * 4);
+    if (held) { held.x = clawPixel(); held.y = clawTip() + 16; }
+    if (Math.abs(clawNX - target) < 0.02 || modeT > 0.7) { mode = "release"; modeT = 0; }
+  } else if (mode === "release") {
+    clawOpen = Math.min(1, modeT / 0.16);
+    if (held && modeT > 0.05) {
+      const ball = held;
+      ball.held = false; ball.gone = true;
+      held = null;
+      award(ball);
+      mode = "pop"; modeT = 0;
+    } else if (!held && modeT > 0.16) { mode = "reset"; modeT = 0; }
+  } else if (mode === "pop") {
+    popT = Math.min(1, modeT / 1.5);
+    if (modeT > 1.65) {
+      if (prizes.length >= 3) openCert();
+      mode = "reset"; modeT = 0; popPrize = null;
+    }
+  } else if (mode === "reset") {
+    clawNX += (aimNX - clawNX) * Math.min(1, dt * 6);
+    clawOpen = 1; clawY = 0;
+    if (modeT > 0.25) mode = "idle";
+  }
+}
+function roundRect(x, y, w, h, r) {
+  const rr = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + rr, y);
+  ctx.arcTo(x + w, y, x + w, y + h, rr);
+  ctx.arcTo(x + w, y + h, x, y + h, rr);
+  ctx.arcTo(x, y + h, x, y, rr);
+  ctx.arcTo(x, y, x + w, y, rr);
+  ctx.closePath();
+}
+function sphere(x, y, r, color, ssr) {
+  const g = ctx.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.08, x, y, r);
+  g.addColorStop(0, "rgba(255,255,255,.95)");
+  g.addColorStop(0.28, color);
+  g.addColorStop(1, shade(color, 0.55));
+  ctx.beginPath(); ctx.arc(x, y, r, 0, 6.3); ctx.fillStyle = g; ctx.fill();
+  ctx.beginPath(); ctx.arc(x, y, r, 0, 6.3);
+  ctx.strokeStyle = "rgba(255,255,255,.7)"; ctx.lineWidth = 1.6; ctx.stroke();
+  ctx.beginPath(); ctx.arc(x - r * 0.32, y - r * 0.34, r * 0.22, 0, 6.3);
+  ctx.fillStyle = "rgba(255,255,255,.85)"; ctx.fill();
+  if (ssr) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(t * 3);
+    ctx.fillStyle = "rgba(255,250,210,.95)";
+    for (let i = 0; i < 4; i++) {
+      ctx.rotate(1.57);
+      ctx.fillRect(r * 0.55, -1.2, r * 0.45, 2.4);
+    }
+    ctx.restore();
+  }
+}
+function drawMachine() {
+  const M = machine, c = SKINS[skin].hex;
+  ctx.fillStyle = "rgba(120,90,70,.16)";
+  ctx.beginPath(); ctx.ellipse(M.x + M.w * 0.55, M.y + M.h - 4, M.w * 0.42, 10, 0, 0, 6.3); ctx.fill();
+  ctx.fillStyle = shade(c, 0.62);
+  ctx.beginPath();
+  ctx.moveTo(M.x + M.w, M.y + 22);
+  ctx.lineTo(M.x + M.w + 18, M.y + 36);
+  ctx.lineTo(M.x + M.w + 18, M.y + M.h - 18);
+  ctx.lineTo(M.x + M.w, M.y + M.h - 28);
+  ctx.fill();
+  roundRect(M.x, M.y, M.w, M.h, 22);
+  const body = ctx.createLinearGradient(M.x, M.y, M.x, M.y + M.h);
+  body.addColorStop(0, shade(c, 1.08));
+  body.addColorStop(0.45, c);
+  body.addColorStop(1, shade(c, 0.78));
+  ctx.fillStyle = body; ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,.65)"; ctx.lineWidth = 2; ctx.stroke();
+  roundRect(M.x + 10, M.y + 12, M.w - 20, 28, 10);
+  ctx.fillStyle = shade(c, 0.55); ctx.fill();
+  ctx.fillStyle = "#fff"; ctx.font = "700 12px -apple-system,sans-serif"; ctx.textAlign = "center";
+  ctx.fillText("LUCKY CLUB", M.x + M.w / 2, M.y + 31);
+  roundRect(glass.x - 8, glass.y - 8, glass.w + 16, glass.h + 16, 16);
+  ctx.fillStyle = "rgba(255,255,255,.28)"; ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,.45)";
+  ctx.fillRect(glass.x, glass.y + glass.h - 16, glass.w, 16);
+  const railY = glass.y + 8;
+  ctx.strokeStyle = "#64748b"; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(glass.x + 6, railY); ctx.lineTo(glass.x + glass.w - 6, railY); ctx.stroke();
+  const n = 10;
+  for (let i = 0; i < n; i++) {
+    const bx = glass.x + 10 + (glass.w - 20) * i / (n - 1);
+    const on = ((i + Math.floor(t * 6)) % 2) === 0;
+    ctx.beginPath(); ctx.arc(bx, glass.y - 2, 4.2, 0, 6.3);
+    ctx.fillStyle = on ? "#fff" : shade(c, 0.7);
+    ctx.fill();
+  }
+  for (let i = 0; i < 3; i++) {
+    ctx.beginPath();
+    ctx.arc(M.x + 22 + i * 14, M.y + M.h - 36, 5, 0, 6.3);
+    ctx.fillStyle = i < coins ? "#FDE047" : "rgba(255,255,255,.35)";
+    ctx.fill();
+  }
+}
+function drawClaw() {
+  const px = clawPixel(), tip = clawTip();
+  ctx.strokeStyle = "#94a3b8"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(px, glass.y + 8); ctx.lineTo(px, tip - 16); ctx.stroke();
+  ctx.fillStyle = "#e2e8f0";
+  ctx.beginPath(); ctx.arc(px, tip - 14, 7, 0, 6.3); ctx.fill();
+  ctx.strokeStyle = "#64748b"; ctx.stroke();
+  const spread = 7 + clawOpen * 18;
+  ctx.lineWidth = 3; ctx.lineCap = "round";
+  for (let s = -1; s <= 1; s++) {
+    ctx.strokeStyle = s === 0 ? "#cbd5e1" : "#94a3b8";
+    ctx.beginPath();
+    ctx.moveTo(px, tip - 10);
+    ctx.quadraticCurveTo(px + s * spread * 0.35, tip + 8, px + s * spread, tip + 24);
+    ctx.stroke();
+    ctx.fillStyle = "#64748b";
+    ctx.beginPath(); ctx.arc(px + s * spread, tip + 24, 2.6, 0, 6.3); ctx.fill();
+  }
+}
+function drawFigure(id, cx, cy, sc) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(sc, sc);
+  ctx.fillStyle = "rgba(120,90,70,.15)";
+  ctx.beginPath(); ctx.ellipse(0, 46, 28, 8, 0, 0, 6.3); ctx.fill();
+  ctx.fillStyle = "#e7e5e4";
+  ctx.beginPath(); ctx.ellipse(0, 36, 26, 10, 0, 0, 6.3); ctx.fill();
+  ctx.fillStyle = "#d6d3d1";
+  ctx.fillRect(-16, 28, 32, 10);
+  const body = id === "bear" ? "#F5C542" : id === "bunny" ? "#FBCFE8" : id === "cat" ? "#6EE7B7" : id === "dino" ? "#A3E635" : id === "fox" ? "#FB923C" : "#F8FAFC";
+  sphere(0, 0, 22, body, id === "bear");
+  ctx.fillStyle = "#292524";
+  ctx.beginPath(); ctx.arc(-7, -2, 2.2, 0, 6.3); ctx.arc(7, -2, 2.2, 0, 6.3); ctx.fill();
+  ctx.fillStyle = "rgba(244,114,182,.45)";
+  ctx.beginPath(); ctx.ellipse(-12, 4, 4, 2.2, 0, 0, 6.3); ctx.ellipse(12, 4, 4, 2.2, 0, 0, 6.3); ctx.fill();
+  if (id === "bear") {
+    sphere(-16, -16, 8, "#F5C542", false); sphere(16, -16, 8, "#F5C542", false);
+    ctx.font = "16px sans-serif"; ctx.textAlign = "center"; ctx.fillText("👑", 0, -24);
+  } else if (id === "bunny") {
+    ctx.fillStyle = "#FBCFE8";
+    ctx.beginPath(); ctx.ellipse(-8, -28, 5, 16, -0.2, 0, 6.3); ctx.ellipse(8, -28, 5, 16, 0.2, 0, 6.3); ctx.fill();
+  } else if (id === "cat") {
+    ctx.fillStyle = "#6EE7B7";
+    ctx.beginPath(); ctx.moveTo(-16, -8); ctx.lineTo(-8, -24); ctx.lineTo(-2, -8); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(16, -8); ctx.lineTo(8, -24); ctx.lineTo(2, -8); ctx.fill();
+  } else if (id === "dino") {
+    ctx.fillStyle = "#65A30D";
+    for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.moveTo(-8 + i * 8, -18); ctx.lineTo(-4 + i * 8, -28); ctx.lineTo(i * 8, -16); ctx.fill(); }
+  } else if (id === "fox") {
+    ctx.fillStyle = "#FB923C";
+    ctx.beginPath(); ctx.moveTo(-14, -6); ctx.lineTo(-20, -26); ctx.lineTo(-4, -12); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(14, -6); ctx.lineTo(20, -26); ctx.lineTo(4, -12); ctx.fill();
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.ellipse(0, 8, 8, 6, 0, 0, 6.3); ctx.fill();
+  } else {
+    ctx.strokeStyle = "#FDE047"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(0, -18); ctx.lineTo(0, -36); ctx.stroke();
+    ctx.fillStyle = "rgba(196,181,253,.9)";
+    ctx.beginPath(); ctx.ellipse(-16, -4, 10, 6, -0.6, 0, 6.3); ctx.fill();
+    ctx.fillStyle = "rgba(249,168,212,.9)";
+    ctx.beginPath(); ctx.ellipse(16, -4, 10, 6, 0.6, 0, 6.3); ctx.fill();
+  }
+  ctx.restore();
+}
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  drawMachine();
+  const ordered = balls.filter(function (b) { return !b.gone; }).slice().sort(function (a, b) { return a.y - b.y; });
+  ordered.forEach(function (b) { sphere(b.x, b.y, b.r, b.color, b.ssr); });
+  drawClaw();
+  ctx.save();
+  roundRect(glass.x, glass.y, glass.w, glass.h, 12);
+  ctx.clip();
+  const sheen = ctx.createLinearGradient(glass.x, glass.y, glass.x + glass.w, glass.y + glass.h);
+  sheen.addColorStop(0, "rgba(255,255,255,.28)");
+  sheen.addColorStop(0.35, "rgba(255,255,255,0)");
+  sheen.addColorStop(1, "rgba(255,255,255,.08)");
+  ctx.fillStyle = sheen; ctx.fillRect(glass.x, glass.y, glass.w * 0.45, glass.h);
+  ctx.restore();
+  ctx.strokeStyle = "rgba(255,255,255,.8)"; ctx.lineWidth = 3;
+  roundRect(glass.x, glass.y, glass.w, glass.h, 12); ctx.stroke();
+  const chuteX = glass.x + glass.w - 18, chuteY = glass.y + glass.h + 8;
+  roundRect(chuteX - 16, chuteY, 36, 28, 8);
+  ctx.fillStyle = "rgba(255,255,255,.55)"; ctx.fill();
+  confetti.forEach(function (p) {
+    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.globalAlpha = Math.max(0, p.life);
+    ctx.fillStyle = p.color; ctx.fillRect(-3, -2, 6, 4); ctx.restore();
+  });
+  if (mode === "pop" && popPrize) {
+    const sc = 0.2 + popT * 0.8;
+    drawFigure(popPrize.id, glass.x + glass.w * 0.5, glass.y + glass.h * 0.42, sc);
+    ctx.globalAlpha = Math.min(1, popT * 2);
+    ctx.fillStyle = "#44403c"; ctx.font = "800 12px -apple-system,sans-serif"; ctx.textAlign = "center";
+    ctx.fillText(T().figs[popPrize.id], glass.x + glass.w * 0.5, glass.y + 22);
+    ctx.globalAlpha = 1;
+  }
+}
+function frame(now) {
+  const dt = Math.min(0.033, (now - last) / 1000); last = now; t += dt;
+  stepBalls(dt);
+  stepMode(dt);
+  for (let i = confetti.length - 1; i >= 0; i--) {
+    const p = confetti[i];
+    p.vy += 420 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt * 0.8; p.rot += dt * 6;
+    if (p.life <= 0) confetti.splice(i, 1);
+  }
+  draw();
+  requestAnimationFrame(frame);
+}
+function syncHud() {
+  const tI = T();
+  document.documentElement.lang = lang;
+  const pt = document.getElementById("pageTitle");
+  if (pt) pt.textContent = tI.title;
+  document.getElementById("coins").textContent = "🪙 " + coins;
+  document.getElementById("hint").textContent = coins > 0 ? tI.hint : tI.certT;
+  document.getElementById("tname").textContent = tI.skins[skin];
+  document.documentElement.style.setProperty("--accent", SKINS[skin].hex);
+  document.querySelectorAll(".langs button").forEach(function (b) { b.classList.toggle("on", b.dataset.l === lang); });
+  document.querySelectorAll(".dot").forEach(function (b, i) { b.classList.toggle("on", i === skin); });
+}
+function showBubble(text) {
+  const b = document.getElementById("bubble");
+  b.textContent = text; b.classList.add("on");
+  clearTimeout(bubbleTimer);
+  bubbleTimer = setTimeout(function () { b.classList.remove("on"); }, 1600);
+}
+function fillCert() {
+  const tI = T();
+  document.getElementById("certK").textContent = tI.certK;
+  document.getElementById("certT").textContent = tI.certT;
+  document.getElementById("certList").innerHTML = prizes.map(function (p, i) { return "<li>" + (i + 1) + ". " + tI.figs[p.id] + "</li>"; }).join("");
+  document.getElementById("certSub").textContent = tI.skins[skin] + " · " + tI.certSub;
+  document.getElementById("copyBtn").textContent = tI.copy;
+  document.getElementById("closeBtn").textContent = tI.close;
+}
+function openCert() { if (!prizes.length) return; fillCert(); document.getElementById("cert").classList.add("on"); }
+function shareText() {
+  const tI = T();
+  return tI.share + "\n" + tI.skins[skin] + "\n" + prizes.map(function (p, i) { return (i + 1) + ". " + tI.figs[p.id]; }).join("\n");
+}
+function goLang(code) {
+  if (code === lang) return;
+  const path = location.pathname.replace(/index\.html$/, "");
+  if (/\/(fr|es|de|en)\/$/.test(path)) location.href = path.replace(/\/(fr|es|de|en)\/$/, "/" + code + "/");
+  else location.href = path.replace(/\/?$/, "/") + code + "/";
+}
+function glassPoint(e) {
+  const r = canvas.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+document.getElementById("dots").innerHTML = SKINS.map(function (s, i) {
+  return '<button class="dot" type="button" data-i="' + i + '" style="background:' + s.hex + '"></button>';
+}).join("");
+document.querySelectorAll(".dot").forEach(function (b) {
+  b.onclick = function () { skin = Number(b.dataset.i); syncHud(); };
+});
+document.querySelectorAll(".langs button").forEach(function (b) { b.onclick = function () { goLang(b.dataset.l); }; });
+function bindHold(id, dir) {
+  const btn = document.getElementById(id);
+  let timer = null;
+  const stop = function () { clearInterval(timer); timer = null; };
+  btn.addEventListener("pointerdown", function (e) { e.preventDefault(); nudge(dir); timer = setInterval(function () { nudge(dir); }, 110); });
+  btn.addEventListener("pointerup", stop);
+  btn.addEventListener("pointerleave", stop);
+  btn.addEventListener("pointercancel", stop);
+}
+bindHold("left", -1);
+bindHold("right", 1);
+document.getElementById("drop").addEventListener("pointerdown", function (e) { e.preventDefault(); beginDrop(); });
+canvas.addEventListener("pointerdown", function (e) {
+  const p = glassPoint(e);
+  if (p.x < glass.x || p.x > glass.x + glass.w || p.y < glass.y || p.y > glass.y + glass.h) return;
+  drag = { x: p.x, y: p.y, moved: 0, id: e.pointerId };
+  try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+});
+canvas.addEventListener("pointermove", function (e) {
+  if (!drag || drag.id !== e.pointerId) return;
+  const p = glassPoint(e);
+  drag.moved += Math.abs(p.x - drag.x);
+  drag.x = p.x;
+  if (drag.moved > 6 && mode === "idle") {
+    reportGameStart({ via: "swipe" });
+    aimNX = clamp((p.x - glass.x) / glass.w, 0.1, 0.9);
+  }
+});
+canvas.addEventListener("pointerup", function (e) {
+  if (!drag || drag.id !== e.pointerId) return;
+  const p = glassPoint(e);
+  if (drag.moved < 10 && p.y > glass.y && p.y < glass.y + glass.h) beginDrop();
+  drag = null;
+});
+window.addEventListener("keydown", function (e) {
+  if (e.key === "ArrowLeft") nudge(-1);
+  if (e.key === "ArrowRight") nudge(1);
+  if (e.key === "ArrowDown" || e.key === " ") { e.preventDefault(); beginDrop(); }
+});
+document.getElementById("copyBtn").onclick = async function () {
+  reportShare({ prizes: prizes.map(function (p) { return p.id; }).join(",") });
+  const text = shareText();
+  try { await navigator.clipboard.writeText(text); }
+  catch (err) {
+    const ta = document.createElement("textarea");
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand("copy"); ta.remove();
+  }
+  document.getElementById("copyBtn").textContent = T().copied;
+};
+document.getElementById("closeBtn").onclick = function () { document.getElementById("cert").classList.remove("on"); };
+document.getElementById("cert").addEventListener("click", function (e) { if (e.target.id === "cert") e.currentTarget.classList.remove("on"); });
+resize();
+window.addEventListener("resize", resize);
+syncHud();
+reportPageView();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
