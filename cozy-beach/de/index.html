@@ -1,0 +1,761 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>&#127754; Ein St&#252;ck Meer: 3D-Insel mit 5 Geheimnissen</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Play Capsule">
+<meta property="og:title" content="&#127754; Ein St&#252;ck Meer: 3D-Insel mit 5 Geheimnissen">
+<meta property="og:description" content="Dreh den 3D-Strandw&#252;rfel um 360&#176; und finde alle 5 versteckten Sch&#228;tze.">
+<meta name="description" content="Dreh den 3D-Strandw&#252;rfel um 360&#176; und finde alle 5 versteckten Sch&#228;tze.">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
+  body{background:#d8f7ff;color:#0f172a}
+  button{font-family:inherit}
+  .app{height:100dvh;max-width:480px;margin:0 auto;display:flex;flex-direction:column;padding:8px 12px calc(8px + env(safe-area-inset-bottom));position:relative}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .langs{display:flex;gap:4px}
+  .langs button{background:transparent;border:1px solid currentColor;color:inherit;border-radius:99px;padding:3px 8px;font-size:11px;font-weight:800;cursor:pointer}
+  .langs button.on{background:#0f172a;color:#fff;border-color:#0f172a}
+  h1{margin:2px 0 0;font-size:16px;line-height:1.15;font-weight:900;flex:1;min-width:0}
+  .sec{font-size:13px;font-weight:800;margin-top:1px}
+  .hint{margin:2px 0 0;font-size:11px;font-weight:650;opacity:.82;min-height:14px}
+  canvas{flex:1;min-height:0;width:100%;touch-action:none;display:block}
+  .themes{display:flex;flex-direction:column;align-items:center;gap:3px;padding-top:2px}
+  .dots{display:flex;gap:14px}
+  .dot{width:38px;height:38px;border-radius:50%;border:2px solid transparent;font-size:18px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.16);padding:0}
+  .dot.on{transform:scale(1.12);border-color:#fff;box-shadow:0 0 0 2px rgba(15,23,42,.45)}
+  .tname{font-size:11px;font-weight:800;min-height:14px;text-align:center}
+  .bubble{position:absolute;left:12px;right:12px;bottom:78px;background:rgba(255,255,255,.94);color:#0f172a;border-radius:14px;padding:8px 10px;font-size:12.5px;font-weight:750;line-height:1.35;opacity:0;transform:translateY(6px);pointer-events:none;transition:.25s;box-shadow:0 10px 30px rgba(0,0,0,.16)}
+  .bubble.on{opacity:1;transform:none}
+  .cert{position:absolute;inset:0;background:rgba(2,6,23,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:3}
+  .cert.on{display:flex}
+  .paper{width:min(100%,320px);background:#f8fafc;color:#0f172a;border-radius:18px;padding:14px 14px 12px;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+  .paper small{letter-spacing:.14em;font-weight:800;color:#0e7490;font-size:10px}
+  .paper h2{margin:4px 0 6px;font-size:18px;line-height:1.2}
+  .paper ul{margin:6px 0;padding:0;list-style:none;font-size:13px;font-weight:700}
+  .paper li{padding:2px 0}
+  .paper p{margin:6px 0 10px;font-size:12px;font-weight:650}
+  .paper .copy{width:100%;border:0;border-radius:12px;padding:11px;font-weight:900;background:linear-gradient(90deg,#22d3ee,#38bdf8);color:#082f49;cursor:pointer}
+  .paper .close{width:100%;margin-top:6px;border:0;background:transparent;font-weight:800;color:#475569;padding:6px;cursor:pointer}
+  .reopen{border:0;background:transparent;color:inherit;font-weight:800;font-size:11px;cursor:pointer;padding:0}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="row">
+    <div class="langs">
+      <button data-l="fr">FR</button>
+      <button data-l="es">ES</button>
+      <button data-l="de">DE</button>
+      <button data-l="en">EN</button>
+    </div>
+    <h1 id="title"></h1>
+  </div>
+  <div class="sec" id="sec">🔍 Secrets trouvés : 0 / 5</div>
+  <div class="hint" id="hint"></div>
+  <canvas id="c"></canvas>
+  <div class="themes">
+    <div class="tname" id="tname"></div>
+    <div class="dots" id="dots"></div>
+    <button class="reopen" id="reopen" hidden></button>
+  </div>
+  <div class="bubble" id="bubble"></div>
+  <div class="cert" id="cert">
+    <div class="paper">
+      <small id="certK"></small>
+      <h2 id="certT"></h2>
+      <ul id="certList"></ul>
+      <p id="certSub"></p>
+      <button class="copy" id="copyBtn"></button>
+      <button class="close" id="closeBtn"></button>
+    </div>
+  </div>
+</div>
+<script>
+const params = new URLSearchParams(location.search);
+let lang = (params.get("lang") || "de").toLowerCase().slice(0, 2);
+const I18N = {
+  fr: {
+    doc: "🌊 Une part de mer · chasse au trésor dans la plage 3D",
+    title: "Une part de mer",
+    hint: "Glisse pour tourner à 360° · touche la mer pour une vague",
+    sec: "Secrets trouvés",
+    themes: ["Maldives cyan","Coucher rose","Lagon émeraude","Mer fluorescente","Nuit calme"],
+    aurora: "Aurore secrète",
+    bubbles: [
+      "Un fossile dans la falaise. Il dormait là depuis toujours.",
+      "Le bernard-l'ermite gardait l'ombre du parasol.",
+      "Une bague au fond de l'eau. Quelqu'un l'a perdue en nageant.",
+      "Une bouteille. Le mot dit : reviens voir la mer demain.",
+      "Le coffre du récif. Il n'attendait que ce tour de poignet."
+    ],
+    names: ["Fossile dinosaure","Bernard-l'ermite","Bague au fond","Bouteille à la mer","Coffre du récif"],
+    certK: "CERTIFICAT · PLAGE MINIATURE",
+    certT: "5/5 secrets cachés",
+    certSub: "Tu as tourné la mer jusqu'à tout trouver.",
+    copy: "📋 Copier mon certificat",
+    copied: "✅ Copié · colle-le en commentaire",
+    close: "Retourner la plage",
+    reopen: "🌊 Revoir le certificat",
+    comment: "🌊 Certificat plage 3D : 5/5 secrets (fossile, bernard-l'ermite, bague, bouteille, coffre). J'ai mis la mer dans une page. À toi de tourner."
+  },
+  es: {
+    doc: "🌊 Un trozo de mar · tesoro en la playa 3D",
+    title: "Un trozo de mar",
+    hint: "Desliza para girar 360° · toca el mar y salpica",
+    sec: "Secretos hallados",
+    themes: ["Maldivas cian","Atardecer rosa","Laguna esmeralda","Mar bioluminiscente","Noche en calma"],
+    aurora: "Aurora secreta",
+    bubbles: [
+      "Un fósil en el acantilado. Llevaba siglos durmiendo.",
+      "El cangrejo ermitaño cuidaba la sombra de la sombrilla.",
+      "Un anillo en el fondo. Alguien lo perdió nadando.",
+      "Una botella. La nota dice: vuelve a ver el mar mañana.",
+      "El cofre del arrecife. Solo esperaba este giro."
+    ],
+    names: ["Fósil dinosaurio","Cangrejo ermitaño","Anillo en el fondo","Botella al mar","Cofre del arrecife"],
+    certK: "CERTIFICADO · PLAYA EN MINIATURA",
+    certT: "5/5 secretos escondidos",
+    certSub: "Giraste el mar hasta encontrarlo todo.",
+    copy: "📋 Copiar mi certificado",
+    copied: "✅ Copiado · pégalo en comentarios",
+    close: "Volver a la playa",
+    reopen: "🌊 Ver el certificado",
+    comment: "🌊 Certificado playa 3D: 5/5 secretos (fósil, ermitaño, anillo, botella, cofre). Metí el mar en una página. Te toca girar."
+  },
+  de: {
+    doc: "🌊 Ein Stück Meer · Schatz in der 3D-Bucht",
+    title: "Ein Stück Meer",
+    hint: "Ziehen für 360° · tippe aufs Meer für eine Welle",
+    sec: "Geheimnisse",
+    themes: ["Malediven-Cyan","Rosa Sonnenuntergang","Smaragdlagune","Leuchtendes Meer","Stille Nacht"],
+    aurora: "Geheimes Polarlicht",
+    bubbles: [
+      "Ein Fossil in der Klippe. Es hat die ganze Zeit geschlafen.",
+      "Der Einsiedlerkrebs hütete den Schatten des Schirms.",
+      "Ein Ring auf dem Grund. Jemand verlor ihn beim Schwimmen.",
+      "Eine Flasche. Der Zettel sagt: komm morgen wieder ans Meer.",
+      "Die Truhe im Riff. Sie wartete nur auf diese Drehung."
+    ],
+    names: ["Dino-Fossil","Einsiedlerkrebs","Ring auf dem Grund","Flaschenpost","Riff-Truhe"],
+    certK: "URKUNDE · MINIATURSTRAND",
+    certT: "5/5 versteckte Geheimnisse",
+    certSub: "Du hast das Meer gedreht, bis alles da war.",
+    copy: "📋 Urkunde kopieren",
+    copied: "✅ Kopiert · ab in die Kommentare",
+    close: "Zurück zum Strand",
+    reopen: "🌊 Urkunde zeigen",
+    comment: "🌊 3D-Strand-Urkunde: 5/5 Geheimnisse (Fossil, Einsiedler, Ring, Flasche, Truhe). Ich habe das Meer in eine Seite gepackt. Dreh du."
+  },
+  en: {
+    doc: "🌊 A Slice of Sea · 3D beach treasure",
+    title: "A slice of sea",
+    hint: "Drag to spin 360° · tap the water for a ripple",
+    sec: "Secrets found",
+    themes: ["Maldives Cyan","Sunset Rose","Emerald Lagoon","Bioluminescent Purple","Midnight Calm"],
+    aurora: "Secret aurora",
+    bubbles: [
+      "A fossil in the cliff. It had been asleep the whole time.",
+      "The hermit crab was keeping the umbrella's shade.",
+      "A ring on the seabed. Someone lost it while swimming.",
+      "A bottle. The note says: come back to the sea tomorrow.",
+      "The reef chest. It was only waiting for this turn of the wrist."
+    ],
+    names: ["Dinosaur fossil","Hermit crab","Ring on the seabed","Message bottle","Reef chest"],
+    certK: "CERTIFICATE · MINIATURE BEACH",
+    certT: "5/5 hidden secrets",
+    certSub: "You turned the sea until everything was found.",
+    copy: "📋 Copy my certificate",
+    copied: "✅ Copied · paste it in the comments",
+    close: "Back to the beach",
+    reopen: "🌊 Show certificate",
+    comment: "🌊 3D beach certificate: 5/5 secrets (fossil, hermit crab, ring, bottle, chest). I fit the sea into a page. Your turn to spin."
+  }
+};
+if (!I18N[lang]) lang = "fr";
+const T = () => I18N[lang];
+
+const THEMES = [
+  {emoji:"🩵", sw:"#67e8f9", bg0:"#bff6ff", bg1:"#e7fcff", water:"#2ad4e0", deep:"#0e7490", sand:"#f6d48a", sand2:"#eab308", seaF:520, seaV:0.05, stars:0, glow:0},
+  {emoji:"🌅", sw:"#fb7185", bg0:"#ffc1d4", bg1:"#ffe7c2", water:"#ff5d8f", deep:"#be185d", sand:"#fdba74", sand2:"#ea580c", seaF:300, seaV:0.045, stars:0, glow:0},
+  {emoji:"💚", sw:"#34d399", bg0:"#99f6e4", bg1:"#ecfdf5", water:"#10b981", deep:"#065f46", sand:"#fde68a", sand2:"#d97706", seaF:440, seaV:0.05, stars:0, glow:0},
+  {emoji:"💜", sw:"#a78bfa", bg0:"#4c1d95", bg1:"#1e1b4b", water:"#c4b5fd", deep:"#5b21b6", sand:"#6b5a45", sand2:"#44403c", seaF:860, seaV:0.04, stars:0, glow:1},
+  {emoji:"🖤", sw:"#1e293b", bg0:"#0b1026", bg1:"#1e293b", water:"#1d4e89", deep:"#0b1b33", sand:"#a89070", sand2:"#57534e", seaF:190, seaV:0.06, stars:1, glow:0}
+];
+const AURORA = {bg0:"#67e8f9", bg1:"#e9d5ff", water:"#a5f3fc", deep:"#7c3aed", sand:"#fde68a", sand2:"#f59e0b", seaF:640, seaV:0.045, stars:0, glow:1};
+
+const X0=-1.15, X1=1.15, Y0=-1.15, Y1=1.15, Z0=0, Z1=1.08;
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+let W=300, H=400, SCALE=70, yaw=2.85, vel=0, dragging=false, moved=0, lastX=0;
+let themeIdx=0, aurora=false, t=0, last=performance.now();
+let view = Object.assign({}, THEMES[0]);
+const found = [false,false,false,false,false];
+const ripples = [];
+let spots = [];
+let crabOK = false;
+let bubbleTimer = 0;
+let actx, seaFilter, seaGain, seaOn=false;
+
+const rnd = (() => { let a=9; return () => { a|=0; a=a+0x6D2B79F5|0; let x=Math.imul(a^a>>>15,1|a); x=x+Math.imul(x^x>>>7,61|x)^x; return ((x^x>>>14)>>>0)/4294967296; }; })();
+const SPECKS = Array.from({length:42}, () => ({x:X0+rnd()*Math.abs(X0), y:Y0+rnd()*(Y1-Y0)}));
+const SPARKS = Array.from({length:16}, () => ({x:0.12+rnd()*(X1-0.2), y:Y0+0.1+rnd()*(Y1-Y0-0.2), p:rnd()*6}));
+
+function hexRgb(h){ return [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)]; }
+function rgbHex(c){ return "#"+c.map(v=>Math.max(0,Math.min(255,v|0)).toString(16).padStart(2,"0")).join(""); }
+function mixHex(a,b,k){ const A=hexRgb(a), B=hexRgb(b); return rgbHex(A.map((v,i)=>v+(B[i]-v)*k)); }
+function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+function shade(hex, light, a){
+  const [r,g,b]=hexRgb(hex), f=light;
+  const R=clamp(r*f|0,0,255), G=clamp(g*f|0,0,255), B=clamp(b*f|0,0,255);
+  return a==null ? `rgb(${R},${G},${B})` : `rgba(${R},${G},${B},${a})`;
+}
+function P(x,y,z){
+  const c=Math.cos(yaw), s=Math.sin(yaw);
+  const xr=x*c-y*s, yr=x*s+y*c;
+  return { x: W*0.5+(xr-yr)*0.8660254*SCALE, y: H*0.60+(xr+yr)*0.5*SCALE-z*SCALE, d: xr+yr };
+}
+function fill(pts, color){
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x, pts[i].y);
+  ctx.closePath();
+  ctx.fillStyle=color;
+  ctx.fill();
+}
+function stroke(pts, color, w){
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x, pts[i].y);
+  ctx.closePath();
+  ctx.strokeStyle=color; ctx.lineWidth=w||1; ctx.stroke();
+}
+function depth(pts){ let s=0; for (const p of pts) s+=p.d; return s/pts.length; }
+function facing(nx,ny){
+  const c=Math.cos(yaw), s=Math.sin(yaw);
+  return (nx*c-ny*s)+(nx*s+ny*c);
+}
+function lam(nx,ny,nz){
+  const c=Math.cos(yaw), s=Math.sin(yaw);
+  const rx=nx*c-ny*s, ry=nx*s+ny*c;
+  const dot=rx*0.35+ry*0.28+nz*0.9;
+  const len=Math.hypot(rx,ry,nz)*Math.hypot(0.35,0.28,0.9);
+  return clamp(0.45+0.8*(dot/len), 0.4, 1.2);
+}
+function qX(x,y0,y1,z0,z1){ return [P(x,y0,z0),P(x,y1,z0),P(x,y1,z1),P(x,y0,z1)]; }
+function qY(y,x0,x1,z0,z1){ return [P(x0,y,z0),P(x1,y,z0),P(x1,y,z1),P(x0,y,z1)]; }
+function qT(x0,x1,y0,y1,z){ return [P(x0,y0,z),P(x1,y0,z),P(x1,y1,z),P(x0,y1,z)]; }
+function disc(x,y,z,r,color){
+  const pts=[];
+  for (let i=0;i<12;i++){ const a=i/12*Math.PI*2; pts.push(P(x+Math.cos(a)*r, y+Math.sin(a)*r, z)); }
+  fill(pts, color);
+  return P(x,y,z);
+}
+function mark(id,x,y,z,rad,ok){
+  const p=P(x,y,z);
+  spots.push({id, x:p.x, y:p.y, r:rad*(SCALE/78), ok, d:p.d});
+}
+
+function drawStrataX(x,y0,y1,nx,ny){
+  const L=lam(nx,ny,0);
+  const cols=["#5c3a28","#7a4e32","#a56b45","#6b442c","#c4a574","#4a3224","#8d6244"];
+  const n=cols.length;
+  for (let i=0;i<n;i++){
+    fill(qX(x,y0,y1, Z0+(Z1-Z0)*i/n, Z0+(Z1-Z0)*(i+1)/n), shade(cols[i], L));
+  }
+  stroke(qX(x,y0,y1,Z0,Z1), "rgba(0,0,0,.28)", 1);
+}
+function drawStrataY(y,x0,x1,nx,ny){
+  const L=lam(nx,ny,0);
+  const cols=["#5c3a28","#7a4e32","#a56b45","#6b442c","#c4a574","#4a3224","#8d6244"];
+  const n=cols.length;
+  for (let i=0;i<n;i++) fill(qY(y,x0,x1, Z0+(Z1-Z0)*i/n, Z0+(Z1-Z0)*(i+1)/n), shade(cols[i], L));
+  stroke(qY(y,x0,x1,Z0,Z1), "rgba(0,0,0,.28)", 1);
+}
+function drawOceanX(x,y0,y1,nx,ny,extras){
+  const L=lam(nx,ny,0);
+  const reefZ=0.34;
+  fill(qX(x,y0,y1,Z0,reefZ), shade("#3d4f46", L));
+  const n=6;
+  for (let i=0;i<n;i++){
+    const z0=reefZ+(Z1-reefZ)*i/n, z1=reefZ+(Z1-reefZ)*(i+1)/n;
+    const col=i<2?view.deep:view.water;
+    fill(qX(x,y0,y1,z0,z1), shade(col, L, 0.34+i*0.07));
+  }
+  fill(qX(x,y0,y1,Z1-0.07,Z1), "rgba(255,255,255,.78)");
+  if (extras==="diamond"){
+    drawDiamond();
+    const fy=Math.sin(t*1.4)*0.4, fz=0.66+Math.sin(t*2)*0.06;
+    disc(x-0.1, fy, fz, 0.055, "rgba(255,255,255,.8)");
+  }
+  if (extras==="chest") drawChest();
+  stroke(qX(x,y0,y1,Z0,Z1), "rgba(0,0,0,.25)", 1);
+}
+function drawOceanY(y,x0,x1,nx,ny,extras){
+  const L=lam(nx,ny,0);
+  const reefZ=0.34;
+  fill(qY(y,x0,x1,Z0,reefZ), shade("#3a4a44", L));
+  const n=6;
+  for (let i=0;i<n;i++){
+    const z0=reefZ+(Z1-reefZ)*i/n, z1=reefZ+(Z1-reefZ)*(i+1)/n;
+    fill(qY(y,x0,x1,z0,z1), shade(i<2?view.deep:view.water, L, 0.34+i*0.07));
+  }
+  fill(qY(y,x0,x1,Z1-0.07,Z1), "rgba(255,255,255,.78)");
+  if (extras==="chest") drawChest();
+  stroke(qY(y,x0,x1,Z0,Z1), "rgba(0,0,0,.25)", 1);
+}
+function bone(x,y,z,ry,rz){
+  const pts=[];
+  for (let i=0;i<10;i++){ const a=i/10*Math.PI*2; pts.push(P(x, y+Math.cos(a)*ry, z+Math.sin(a)*rz)); }
+  fill(pts, "#f3e6cf");
+  stroke(pts, "#6b4f36", 1);
+}
+function drawFossil(){
+  const x=X0-0.025;
+  bone(x,-0.42,0.40,0.13,0.08);
+  bone(x,-0.16,0.48,0.14,0.085);
+  bone(x,0.08,0.54,0.14,0.085);
+  bone(x,0.30,0.52,0.12,0.075);
+  bone(x,0.52,0.68,0.26,0.18);
+  bone(x,0.74,0.50,0.12,0.07);
+  ctx.strokeStyle="#6b4f36"; ctx.lineWidth=2.4;
+  for (const [y,z] of [[-0.16,0.48],[0.08,0.54],[0.30,0.52]]){
+    const a=P(x,y,z), b=P(x,y-0.04,z-0.2);
+    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+  }
+  const eye=P(x,0.58,0.74);
+  ctx.fillStyle="#5c4033"; ctx.beginPath(); ctx.arc(eye.x,eye.y,3.2,0,6.3); ctx.fill();
+  mark(0, x, 0.2, 0.55, 46, facing(-1,0)>0.12);
+}
+function drawDiamond(){
+  const x=0.55,y=-0.2,z=0.55, s=0.09*(1+0.28*Math.sin(t*6));
+  const top=P(x,y,z+s), bot=P(x,y,z-s*0.7);
+  const e=[P(x+s,y,z),P(x,y+s,z),P(x-s,y,z),P(x,y-s,z)];
+  const cols=["#ecfeff","#67e8f9","#ffffff","#a5f3fc"];
+  for (let i=0;i<4;i++){
+    fill([top,e[i],e[(i+1)%4]], cols[i]);
+    fill([bot,e[(i+1)%4],e[i]], "rgba(255,255,255,.85)");
+  }
+  mark(2, x, y, z, 34, facing(1,0)>0.18);
+}
+function drawChest(){
+  const y=Y1+0.04, x0=0.22, x1=0.58, z0=0.30, z1=0.56, d=0.16;
+  const L=lam(0,1,0);
+  fill([P(x0,y,z0),P(x1,y,z0),P(x1,y,z1),P(x0,y,z1)], shade("#9a3412", L));
+  fill([P(x0,y,z1),P(x1,y,z1),P(x1,y-d,z1),P(x0,y-d,z1)], shade("#b45309", lam(0,0,1)));
+  fill([P(x1,y,z0),P(x1,y-d,z0),P(x1,y-d,z1),P(x1,y,z1)], shade("#7c2d12", L*0.9));
+  fill([P(x0+0.02,y+0.01,(z0+z1)/2-0.025),P(x1-0.02,y+0.01,(z0+z1)/2-0.025),P(x1-0.02,y+0.01,(z0+z1)/2+0.025),P(x0+0.02,y+0.01,(z0+z1)/2+0.025)], "#fbbf24");
+  const lock=P((x0+x1)/2, y+0.02, (z0+z1)/2);
+  ctx.fillStyle="#fde68a"; ctx.beginPath(); ctx.arc(lock.x, lock.y, 3, 0, 6.3); ctx.fill();
+  mark(4, 0.4, y, 0.42, 36, facing(0,1)>0.18);
+}
+function drawPalm(x,y,phase){
+  const h=0.82, segs=6;
+  let px=x, py=y;
+  for (let i=0;i<segs;i++){
+    const sway=Math.sin(t*1.35+phase+i)*0.015*i;
+    const nx=x+0.035*i+sway, ny=y+0.015*i;
+    const z0=Z1+h*i/segs, z1=Z1+h*(i+1)/segs, w=0.05*(1-i/segs*0.45);
+    fill([P(px-w,py,z0),P(px+w,py,z0),P(nx+w*0.75,ny,z1),P(nx-w*0.75,ny,z1)], i%2?"#7c4a1e":"#a1622f");
+    px=nx; py=ny;
+  }
+  const tz=Z1+h;
+  for (let k=0;k<7;k++){
+    const a=k/7*Math.PI*2+phase;
+    const len=0.46, drop=0.2+Math.sin(t*1.6+k+phase)*0.03;
+    const base=P(px,py,tz);
+    const tip=P(px+Math.cos(a)*len, py+Math.sin(a)*len, tz-drop);
+    const mid=P(px+Math.cos(a+0.45)*len*0.55, py+Math.sin(a+0.45)*len*0.55, tz-drop*0.25);
+    fill([base,tip,mid], k%2?"#166534":"#4ade80");
+  }
+  disc(px+0.05, py+0.02, tz-0.05, 0.055, "#7c4a1e");
+  disc(px-0.04, py-0.03, tz-0.02, 0.045, "#92400e");
+  return P(x,y,Z1);
+}
+function drawUmbrella(x,y){
+  const rim=0.46, rimZ=Z1+0.28, apexZ=Z1+0.5;
+  fill([P(x-0.018,y,Z1),P(x+0.018,y,Z1),P(x+0.018,y,apexZ),P(x-0.018,y,apexZ)], "#94a3b8");
+  const N=8;
+  for (let i=0;i<N;i++){
+    const a0=i/N*Math.PI*2, a1=(i+1)/N*Math.PI*2;
+    fill([
+      P(x,y,apexZ),
+      P(x+Math.cos(a0)*rim, y+Math.sin(a0)*rim, rimZ),
+      P(x+Math.cos(a1)*rim, y+Math.sin(a1)*rim, rimZ)
+    ], i%2?"#f8fafc":"#facc15");
+  }
+  return P(x,y,apexZ);
+}
+function drawChair(x,y,color){
+  const z=Z1+0.1, dx=0.16, dy=0.26;
+  fill([P(x-dx,y-dy,z),P(x+dx,y-dy,z),P(x+dx,y+dy*0.15,z+0.02),P(x-dx,y+dy*0.15,z+0.02)], color);
+  fill([P(x-dx,y+dy*0.15,z+0.02),P(x+dx,y+dy*0.15,z+0.02),P(x+dx*0.9,y+dy*0.42,z+0.32),P(x-dx*0.9,y+dy*0.42,z+0.32)], color);
+  fill([P(x-dx*0.15,y+dy*0.15,z+0.04),P(x+dx*0.15,y+dy*0.15,z+0.04),P(x+dx*0.1,y+dy*0.4,z+0.30),P(x-dx*0.1,y+dy*0.4,z+0.30)], "rgba(255,255,255,.85)");
+  return P(x,y,z);
+}
+function drawSlide(x,y){
+  const zTop=Z1+0.5, zBot=Z1+0.05;
+  fill([P(x-0.1,y+0.05,zTop),P(x+0.12,y+0.05,zTop),P(x+0.16,y-0.34,zBot),P(x-0.14,y-0.34,zBot)], "#38bdf8");
+  fill([P(x+0.12,y+0.05,zTop),P(x+0.2,y+0.02,zTop-0.02),P(x+0.24,y-0.34,zBot),P(x+0.16,y-0.34,zBot)], "#0284c7");
+  for (let i=0;i<4;i++){
+    const z=Z1+0.08+i*0.1;
+    fill([P(x-0.08,y+0.16,z),P(x+0.08,y+0.16,z),P(x+0.08,y+0.2,z+0.03),P(x-0.08,y+0.2,z+0.03)], "#facc15");
+  }
+  fill([P(x-0.1,y+0.12,Z1),P(x-0.06,y+0.12,Z1),P(x-0.06,y+0.12,zTop),P(x-0.1,y+0.12,zTop)], "#eab308");
+  fill([P(x+0.08,y+0.12,Z1),P(x+0.12,y+0.12,Z1),P(x+0.12,y+0.12,zTop),P(x+0.08,y+0.12,zTop)], "#eab308");
+  return P(x,y,zBot);
+}
+function drawRing(x,y){
+  const z=Z1+0.045, n=14, o=0.15, inn=0.08;
+  for (let i=0;i<n;i++){
+    const a0=i/n*Math.PI*2, a1=(i+1)/n*Math.PI*2;
+    fill([
+      P(x+Math.cos(a0)*o,y+Math.sin(a0)*o,z),
+      P(x+Math.cos(a1)*o,y+Math.sin(a1)*o,z),
+      P(x+Math.cos(a1)*inn,y+Math.sin(a1)*inn,z),
+      P(x+Math.cos(a0)*inn,y+Math.sin(a0)*inn,z)
+    ], i%3===0?"#fff1f2":"#fb7185");
+  }
+  return P(x,y,z);
+}
+function drawCrab(x,y){
+  const z=Z1+0.07;
+  disc(x,y,z,0.1,"#f97316");
+  disc(x+0.02,y-0.02,z+0.05,0.07,"#fdba74");
+  disc(x-0.1,y+0.02,z+0.02,0.045,"#ea580c");
+  disc(x+0.12,y+0.03,z+0.02,0.04,"#ea580c");
+  const e1=P(x-0.03,y-0.06,z+0.12), e2=P(x+0.05,y-0.05,z+0.12);
+  ctx.strokeStyle="#7c2d12"; ctx.lineWidth=1.5;
+  const b=P(x,y,z+0.05);
+  ctx.beginPath(); ctx.moveTo(b.x,b.y); ctx.lineTo(e1.x,e1.y); ctx.moveTo(b.x,b.y); ctx.lineTo(e2.x,e2.y); ctx.stroke();
+  ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(e1.x,e1.y,1.6,0,6.3); ctx.arc(e2.x,e2.y,1.6,0,6.3); ctx.fill();
+  return P(x,y,z);
+}
+function drawBottle(x,y,z){
+  disc(x,y,z,0.055,"rgba(134,239,172,.9)");
+  fill([P(x-0.025,y,z),P(x+0.025,y,z),P(x+0.018,y,z+0.16),P(x-0.018,y,z+0.16)], "rgba(134,239,172,.75)");
+  fill([P(x-0.012,y,z+0.16),P(x+0.012,y,z+0.16),P(x+0.012,y,z+0.22),P(x-0.012,y,z+0.22)], "#d6d3d1");
+  disc(x,y,z+0.1,0.02,"#fff");
+  return P(x,y,z+0.12);
+}
+function drawGull(phase){
+  const x=Math.sin(t*0.32+phase)*0.95;
+  const y=Math.cos(t*0.24+phase)*0.7;
+  const z=Z1+1.15+Math.sin(t*0.9+phase)*0.06;
+  const flap=Math.sin(t*7+phase)*0.16;
+  const c=P(x,y,z);
+  const l=P(x-0.26,y,z+flap), r=P(x+0.26,y,z+flap);
+  const b=P(x+0.08,y-0.02,z);
+  fill([c,l,P(x-0.05,y,z-0.02)], "#f8fafc");
+  fill([c,r,P(x+0.05,y,z-0.02)], "#e2e8f0");
+  fill([c,b,P(x,y,z+0.03)], "#f8fafc");
+  ctx.fillStyle="#f59e0b";
+  ctx.beginPath(); ctx.arc(b.x,b.y,1.8,0,6.3); ctx.fill();
+}
+function drawTop(){
+  const sand=qT(X0,0,Y0,Y1,Z1);
+  fill(sand, shade(view.sand, lam(0,0,1)));
+  ctx.save();
+  ctx.beginPath(); sand.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)); ctx.closePath(); ctx.clip();
+  ctx.fillStyle=shade(view.sand2, 0.7);
+  for (const s of SPECKS){ const p=P(s.x,s.y,Z1+0.01); ctx.fillRect(p.x,p.y,1.7,1.7); }
+  ctx.restore();
+  stroke(sand, "rgba(0,0,0,.25)", 1);
+  const water=qT(0,X1,Y0,Y1,Z1+0.02);
+  fill(water, shade(view.water, lam(0,0,1), view.glow?0.5:0.58));
+  for (const sp of SPARKS){
+    const p=P(sp.x,sp.y,Z1+0.04);
+    const a=view.glow ? 0.45+0.55*(0.5+0.5*Math.sin(t*3+sp.p)) : 0.15+0.35*(0.5+0.5*Math.sin(t*2+sp.p));
+    ctx.fillStyle=`rgba(255,255,255,${a})`;
+    ctx.fillRect(p.x-1, p.y-1, view.glow?3:2, view.glow?3:2);
+  }
+  for (let i=0;i<9;i++){
+    const yy=Y0+0.08+i*(Y1-Y0-0.16)/8;
+    const wob=Math.sin(t*2.1+i*0.8)*0.06;
+    disc(wob, yy, Z1+0.05, 0.09, "rgba(255,255,255,.82)");
+    disc(0.18+Math.sin(t*1.6+i)*0.04, yy, Z1+0.045, 0.06, "rgba(255,255,255,.45)");
+  }
+  stroke(water, "rgba(255,255,255,.35)", 1);
+}
+function drawStars(){
+  ctx.fillStyle="rgba(255,255,255,.85)";
+  for (let i=0;i<28;i++){
+    const x=(i*97%100)/100*W, y=(i*53%70)/100*H*0.55;
+    const a=0.4+0.6*(0.5+0.5*Math.sin(t*2+i));
+    ctx.globalAlpha=a; ctx.fillRect(x,y,i%4===0?2.2:1.3,i%4===0?2.2:1.3); ctx.globalAlpha=1;
+  }
+}
+function drawAuroraWash(){
+  const g=ctx.createLinearGradient(0,0,W,H);
+  g.addColorStop(0, "rgba(34,211,238,.35)");
+  g.addColorStop(0.5, "rgba(192,132,252,.28)");
+  g.addColorStop(1, "rgba(244,114,182,.25)");
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  ctx.globalAlpha=0.35;
+  ctx.fillStyle="#f0abfc";
+  ctx.beginPath(); ctx.ellipse(W*0.3, H*0.2+Math.sin(t)*12, 90, 30, t*0.2, 0, 6.3); ctx.fill();
+  ctx.fillStyle="#67e8f9";
+  ctx.beginPath(); ctx.ellipse(W*0.7, H*0.16+Math.cos(t*0.8)*10, 80, 24, -0.4, 0, 6.3); ctx.fill();
+  ctx.globalAlpha=1;
+}
+function targetTheme(){ return aurora ? AURORA : THEMES[themeIdx]; }
+function draw(){
+  const tgt=targetTheme();
+  for (const k of ["bg0","bg1","water","deep","sand","sand2"]) view[k]=mixHex(view[k], tgt[k], 0.08);
+  view.glow = tgt.glow; view.stars=tgt.stars;
+  const bg=ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0, view.bg0); bg.addColorStop(1, view.bg1);
+  ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+  document.body.style.background=view.bg0;
+  const lum=(()=>{ const [r,g,b]=hexRgb(view.bg0).map(v=>v/255); return 0.2126*r+0.7152*g+0.0722*b; })();
+  document.body.style.color = lum<0.45 ? "#f8fafc" : "#0f172a";
+  if (view.stars) drawStars();
+  if (aurora) drawAuroraWash();
+  ctx.save();
+  ctx.translate(W/2, H*0.78); ctx.scale(1,0.32);
+  ctx.fillStyle="rgba(0,0,0,.16)"; ctx.beginPath(); ctx.arc(0,0,SCALE*1.55,0,6.3); ctx.fill();
+  ctx.restore();
+  spots=[]; crabOK=false;
+  const faces=[];
+  const push=(nx,ny,pts,fn)=>{ if (facing(nx,ny)>0.04) faces.push({d:depth(pts), fn}); };
+  push(-1,0,qX(X0,Y0,Y1,Z0,Z1), ()=>{ drawStrataX(X0,Y0,Y1,-1,0); drawFossil(); });
+  push(1,0,qX(X1,Y0,Y1,Z0,Z1), ()=>{ drawOceanX(X1,Y0,Y1,1,0,"diamond"); });
+  push(0,-1,qY(Y0,X0,X1,Z0,Z1), ()=>{ drawStrataY(Y0,X0,0,0,-1); drawOceanY(Y0,0,X1,0,-1); });
+  push(0,1,qY(Y1,X0,X1,Z0,Z1), ()=>{ drawStrataY(Y1,X0,0,0,1); drawOceanY(Y1,0,X1,0,1,"chest"); });
+  fill(qT(0.08, X1-0.08, Y0+0.1, Y1-0.1, 0.24), shade(view.deep, 0.75, 0.92));
+  faces.sort((a,b)=>a.d-b.d);
+  for (const f of faces) f.fn();
+  drawTop();
+  const props=[];
+  const add=(x,y,fn)=>props.push({d:P(x,y,Z1).d, fn});
+  add(-0.82,0.62, ()=>drawPalm(-0.82,0.62,0.4));
+  add(-0.28,0.78, ()=>drawPalm(-0.28,0.78,2.1));
+  add(-0.9,-0.62, ()=>drawSlide(-0.9,-0.62));
+  add(-0.78,-0.05, ()=>drawChair(-0.78,-0.05,"#fb7185"));
+  add(-0.22,-0.48, ()=>drawChair(-0.22,-0.48,"#7dd3fc"));
+  add(-0.5,0.02, ()=>drawUmbrella(-0.5,0.02));
+  add(-0.95,0.05, ()=>drawRing(-0.95,0.05));
+  add(-0.5,0.40, ()=>{
+    const base=P(-0.5,0.02,Z1+0.15);
+    const cp=P(-0.5,0.40,Z1+0.08);
+    const cover=base.d>cp.d+0.02 && Math.hypot(base.x-cp.x, base.y-cp.y)<SCALE*0.5;
+    crabOK=!cover;
+    if (!cover) drawCrab(-0.5,0.40);
+    mark(1,-0.5,0.40,Z1+0.1,32,crabOK);
+  });
+  const bz=Z1+0.12+Math.sin(t*2.2)*0.045;
+  add(0.78,0.86, ()=>{
+    drawBottle(0.78,0.86,bz);
+    mark(3,0.78,0.86,bz+0.1,30, P(0.78,0.86,bz).d>-0.15);
+  });
+  props.sort((a,b)=>a.d-b.d);
+  for (const p of props) p.fn();
+  drawGull(0); drawGull(2.2);
+  for (const rp of ripples){
+    for (let ring=0; ring<3; ring++){
+      const rad=0.06+rp.age*0.7+ring*0.08;
+      ctx.beginPath();
+      for (let i=0;i<=16;i++){
+        const a=i/16*Math.PI*2;
+        const p=P(rp.x+Math.cos(a)*rad, rp.y+Math.sin(a)*rad, Z1+0.05);
+        if (i) ctx.lineTo(p.x,p.y); else ctx.moveTo(p.x,p.y);
+      }
+      ctx.strokeStyle=`rgba(255,255,255,${Math.max(0, 0.75-rp.age)*(1-ring*0.28)})`;
+      ctx.lineWidth=1.6; ctx.stroke();
+    }
+  }
+  for (let i=0;i<5;i++) if (found[i]) {
+    const s=secretAnchor(i);
+    const p=P(s.x,s.y,s.z+0.16);
+    ctx.fillStyle="#fbbf24"; ctx.font="16px sans-serif"; ctx.textAlign="center";
+    ctx.fillText("✦", p.x, p.y);
+  }
+}
+function secretAnchor(i){
+  if (i===0) return {x:X0, y:0.35, z:0.55};
+  if (i===1) return {x:-0.5, y:0.40, z:Z1+0.1};
+  if (i===2) return {x:0.55, y:-0.2, z:0.55};
+  if (i===3) return {x:0.78, y:0.86, z:Z1+0.2};
+  return {x:0.4, y:Y1, z:0.42};
+}
+function resize(){
+  const rect=canvas.getBoundingClientRect();
+  const r=Math.min(2, window.devicePixelRatio||1);
+  canvas.width=Math.max(2, Math.floor(rect.width*r));
+  canvas.height=Math.max(2, Math.floor(rect.height*r));
+  ctx.setTransform(r,0,0,r,0,0);
+  W=rect.width; H=rect.height;
+  SCALE=Math.min(W*0.23, H*0.205);
+}
+function frame(now){
+  const dt=Math.min(0.05,(now-last)/1000); last=now; t+=dt;
+  if (!dragging){ yaw+=vel; vel*=Math.exp(-3.2*dt); }
+  for (let i=ripples.length-1;i>=0;i--){ ripples[i].age+=dt; if (ripples[i].age>1.35) ripples.splice(i,1); }
+  if (seaOn && THEMES[themeIdx] && !aurora && themeIdx===3 && seaFilter){
+    seaFilter.frequency.value=760+Math.sin(t*3)*180;
+  }
+  draw();
+  requestAnimationFrame(frame);
+}
+function unlock(){
+  if (seaOn) return;
+  const AC=window.AudioContext||window.webkitAudioContext;
+  if (!AC) return;
+  actx=new AC();
+  const n=actx.createBuffer(1, actx.sampleRate*2, actx.sampleRate);
+  const d=n.getChannelData(0);
+  let lastN=0;
+  for (let i=0;i<d.length;i++){ const w=Math.random()*2-1; lastN=lastN*0.985+w*0.02; d[i]=lastN*3.2; }
+  const src=actx.createBufferSource(); src.buffer=n; src.loop=true;
+  seaFilter=actx.createBiquadFilter(); seaFilter.type="lowpass";
+  seaGain=actx.createGain(); seaGain.gain.value=0;
+  src.connect(seaFilter); seaFilter.connect(seaGain); seaGain.connect(actx.destination); src.start();
+  seaOn=true;
+  applySea();
+}
+function applySea(){
+  if (!seaOn) return;
+  const th=aurora?AURORA:THEMES[themeIdx];
+  const now=actx.currentTime;
+  seaFilter.frequency.linearRampToValueAtTime(th.seaF, now+0.35);
+  seaGain.gain.linearRampToValueAtTime(th.seaV, now+0.4);
+}
+function chime(){
+  unlock(); if (!actx) return;
+  const t0=actx.currentTime;
+  [784,1175,1568].forEach((f,i)=>{
+    const o=actx.createOscillator(), g=actx.createGain();
+    o.type="sine"; o.frequency.value=f;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(0.07, t0+0.02+i*0.04);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0+0.55);
+    o.connect(g); g.connect(actx.destination);
+    o.start(t0+i*0.05); o.stop(t0+0.6);
+  });
+}
+function splash(){
+  unlock(); if (!actx) return;
+  const t0=actx.currentTime, o=actx.createOscillator(), g=actx.createGain();
+  o.type="sine"; o.frequency.setValueAtTime(420, t0); o.frequency.exponentialRampToValueAtTime(140, t0+0.22);
+  g.gain.setValueAtTime(0.06, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0+0.24);
+  o.connect(g); g.connect(actx.destination); o.start(t0); o.stop(t0+0.26);
+}
+function foundCount(){ return found.reduce((s,v)=>s+v,0); }
+function popBubble(i){
+  const b=document.getElementById("bubble");
+  b.textContent=T().bubbles[i];
+  b.classList.add("on");
+  clearTimeout(bubbleTimer);
+  bubbleTimer=setTimeout(()=>b.classList.remove("on"), 2400);
+}
+function syncHud(){
+  const tI=T();
+  document.documentElement.lang=lang;
+  document.title=tI.doc;
+  document.getElementById("title").textContent=tI.title;
+  document.getElementById("hint").textContent=tI.hint;
+  document.getElementById("sec").textContent=`🔍 ${tI.sec} : ${foundCount()} / 5`;
+  document.querySelectorAll(".langs button").forEach(b=>b.classList.toggle("on", b.dataset.l===lang));
+  document.getElementById("tname").textContent=aurora ? tI.aurora : tI.themes[themeIdx];
+  document.querySelectorAll(".dot").forEach((b,i)=>b.classList.toggle("on", !aurora && i===themeIdx));
+  document.querySelectorAll(".dot").forEach((b,i)=>b.setAttribute("aria-label", tI.themes[i]));
+  const re=document.getElementById("reopen");
+  re.hidden=foundCount()<5; re.textContent=tI.reopen;
+  if (document.getElementById("cert").classList.contains("on")) fillCert();
+}
+function fillCert(){
+  const tI=T();
+  document.getElementById("certK").textContent=tI.certK;
+  document.getElementById("certT").textContent=tI.certT;
+  document.getElementById("certSub").textContent=tI.certSub;
+  document.getElementById("certList").innerHTML=tI.names.map(n=>`<li>✦ ${n}</li>`).join("");
+  document.getElementById("copyBtn").textContent=tI.copy;
+  document.getElementById("closeBtn").textContent=tI.close;
+}
+function openCert(){ fillCert(); document.getElementById("cert").classList.add("on"); }
+function celebrate(){
+  aurora=true; applySea(); chime();
+  setTimeout(chime, 220);
+  openCert();
+  syncHud();
+}
+function hitTest(x,y){
+  let best=null, bd=1e9;
+  for (const s of spots){
+    if (!s.ok || found[s.id]) continue;
+    const d=Math.hypot(s.x-x, s.y-y);
+    if (d<s.r && d<bd){ bd=d; best=s; }
+  }
+  return best;
+}
+function waterPoint(x,y){
+  let best=null, bd=30;
+  for (let i=0;i<=7;i++) for (let j=0;j<=7;j++){
+    const wx=0.08+i/7*(X1-0.16), wy=Y0+0.08+j/7*(Y1-Y0-0.16);
+    const p=P(wx,wy,Z1);
+    const d=Math.hypot(p.x-x, p.y-y);
+    if (d<bd){ bd=d; best={x:wx,y:wy}; }
+  }
+  return best;
+}
+function onTap(e){
+  const r=canvas.getBoundingClientRect();
+  const x=e.clientX-r.left, y=e.clientY-r.top;
+  const hit=hitTest(x,y);
+  if (hit){
+    found[hit.id]=true;
+    chime();
+    if (navigator.vibrate) navigator.vibrate(12);
+    popBubble(hit.id);
+    syncHud();
+    if (foundCount()===5) celebrate();
+    return;
+  }
+  const w=waterPoint(x,y);
+  if (w){ ripples.push({x:w.x,y:w.y,age:0}); splash(); }
+}
+canvas.addEventListener("pointerdown", e=>{
+  dragging=true; moved=0; lastX=e.clientX; vel=0;
+  canvas.setPointerCapture(e.pointerId);
+  unlock();
+});
+canvas.addEventListener("pointermove", e=>{
+  if (!dragging) return;
+  const dx=e.clientX-lastX; lastX=e.clientX; moved+=Math.abs(dx);
+  yaw+=dx*0.012; vel=dx*0.012;
+});
+canvas.addEventListener("pointerup", e=>{
+  dragging=false;
+  if (moved<8) onTap(e);
+});
+canvas.addEventListener("pointercancel", ()=>{ dragging=false; });
+window.addEventListener("keydown", e=>{
+  if (e.key==="ArrowLeft") yaw-=0.12;
+  if (e.key==="ArrowRight") yaw+=0.12;
+});
+function selectTheme(i){
+  unlock();
+  aurora=false; themeIdx=i; applySea(); syncHud();
+}
+document.getElementById("dots").innerHTML = THEMES.map((th,i)=>`<button class="dot" data-i="${i}" style="background:${th.sw}" type="button">${th.emoji}</button>`).join("");
+document.querySelectorAll(".dot").forEach(b=>b.onclick=()=>selectTheme(Number(b.dataset.i)));
+document.querySelectorAll(".langs button").forEach(b=>b.onclick=()=>{ lang=b.dataset.l; syncHud(); });
+document.getElementById("copyBtn").onclick=async ()=>{
+  const text=T().comment;
+  try { await navigator.clipboard.writeText(text); }
+  catch(e){ const ta=document.createElement("textarea"); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); }
+  document.getElementById("copyBtn").textContent=T().copied;
+};
+document.getElementById("closeBtn").onclick=()=>document.getElementById("cert").classList.remove("on");
+document.getElementById("reopen").onclick=openCert;
+document.getElementById("cert").addEventListener("click", e=>{ if (e.target.id==="cert") e.currentTarget.classList.remove("on"); });
+resize();
+window.addEventListener("resize", resize);
+syncHud();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>&#128087; 40s Style Judge: Beat the 6.4/10 Average</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Play Capsule">
+<meta property="og:title" content="&#128087; 40s Style Judge: Beat the 6.4/10 Average">
+<meta property="og:description" content="5 slots, 40 seconds: style your look and get your savage verdict receipt.">
+<meta name="description" content="5 slots, 40 seconds: style your look and get your savage verdict receipt.">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+  body{margin:0;background:#0e0c14;color:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",sans-serif;min-height:100vh;display:flex;justify-content:center}
+  .app{width:100%;max-width:420px;padding:14px 16px 28px;display:flex;flex-direction:column;gap:12px}
+  .top{display:flex;justify-content:space-between;align-items:center}
+  .langs{display:flex;gap:6px}
+  .langs button{background:#1e1b2e;border:1px solid #332d4b;color:#cbd5e1;border-radius:99px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer}
+  .langs button.active{background:#f43f5e;border-color:#f43f5e;color:#fff}
+  .timer{font-variant-numeric:tabular-nums;font-weight:900;font-size:20px;color:#fb7185;background:#291421;padding:4px 12px;border-radius:99px;border:1px solid #be123c}
+  .theme-box{background:linear-gradient(135deg,#1f1932,#151221);border:1px solid #3b315e;border-radius:16px;padding:12px 14px}
+  .theme-kicker{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#f472b6;font-weight:800}
+  .theme-title{font-size:18px;font-weight:900;margin-top:3px;line-height:1.25}
+  .theme-sub{font-size:12px;color:#94a3b8;margin-top:4px}
+  .stage{display:flex;gap:12px;align-items:stretch}
+  .mannequin{width:130px;background:#171426;border:1px solid #2e274a;border-radius:16px;padding:10px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;text-align:center}
+  .mannequin .doll{font-size:30px;line-height:1.25;display:flex;flex-direction:column;gap:2px;margin:auto 0}
+  .mannequin .tag{font-size:11px;color:#a78bfa;font-weight:700}
+  .slots{flex:1;display:flex;flex-direction:column;gap:8px}
+  .slot-group{background:#171426;border:1px solid #2a2442;border-radius:12px;padding:8px 10px}
+  .slot-label{font-size:11px;color:#94a3b8;font-weight:700;margin-bottom:5px;display:flex;justify-content:space-between}
+  .opts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .opt{background:#231e38;border:1.5px solid transparent;border-radius:9px;padding:6px 4px;color:#f1f5f9;font-size:11px;font-weight:600;text-align:center;cursor:pointer;line-height:1.2}
+  .opt.sel{border-color:#f43f5e;background:#3a192c;color:#fff}
+  .submit-btn{background:linear-gradient(90deg,#f43f5e,#ec4899);color:#fff;border:none;border-radius:14px;padding:15px;font-size:16px;font-weight:900;cursor:pointer;box-shadow:0 8px 24px rgba(244,63,94,.35)}
+  .receipt-modal{display:none;flex-direction:column;gap:12px}
+  .receipt-modal.show{display:flex}
+  .receipt{background:#fdfbf7;color:#111827;border-radius:12px;padding:18px 16px;font-family:"Courier New",Courier,monospace;box-shadow:0 16px 40px rgba(0,0,0,.6);position:relative;border-top:6px dashed #0e0c14;border-bottom:6px dashed #0e0c14}
+  .r-head{text-align:center;border-bottom:1.5px dashed #111;padding-bottom:10px;margin-bottom:10px}
+  .r-head h2{margin:0;font-size:18px;letter-spacing:.04em}
+  .r-head p{margin:3px 0 0;font-size:11px;color:#4b5563}
+  .r-score-box{display:flex;justify-content:space-between;align-items:baseline;background:#111827;color:#fff;padding:10px 12px;border-radius:8px;margin:8px 0}
+  .r-score-box .num{font-size:32px;font-weight:900;color:#fb7185}
+  .r-line{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px dotted #d1d5db}
+  .r-roast{margin-top:10px;padding:10px;background:#fee2e2;border-left:4px solid #ef4444;font-family:-apple-system,sans-serif;font-size:13px;font-weight:800;color:#991b1b;line-height:1.35}
+  .r-token{margin-top:10px;font-family:-apple-system,sans-serif;font-size:12px;font-weight:800;text-align:center;color:#111;background:#fef3c7;padding:8px;border-radius:6px}
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .btn-sec{background:#27233a;color:#fff;border:1px solid #453c67;border-radius:12px;padding:13px;font-weight:800;font-size:14px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="app">
+  <div id="pageTitle" style="font-size:15px;font-weight:900;color:#fda4af;background:#1f1932;border:1px solid #3b315e;border-radius:10px;padding:7px 12px;text-align:center">👗 Tribunal du Style · Défi 40 Secondes</div>
+  <div class="top">
+    <div class="langs">
+      <button data-l="fr">FR</button>
+      <button data-l="es">ES</button>
+      <button data-l="de">DE</button>
+      <button data-l="en">EN</button>
+    </div>
+    <div class="timer" id="timer">00:40</div>
+  </div>
+
+  <div id="playView" style="display:flex;flex-direction:column;gap:12px">
+    <div class="theme-box">
+      <div class="theme-kicker" id="tKicker">THÈME DU JOUR · MOYENNE DU FIL : 6,4/10</div>
+      <div class="theme-title" id="tTitle">Dimanche midi chez sa mère (elle te déteste déjà)</div>
+      <div class="theme-sub" id="tSub">40 secondes · 5 choix · L'ironie ne marque aucun point.</div>
+    </div>
+
+    <div class="stage">
+      <div class="mannequin">
+        <div class="tag" id="mTag">TON LOOK</div>
+        <div class="doll" id="dollPreview">🧥<br>👚<br>👖<br>👠<br>👜</div>
+        <div class="tag" id="mCount">0 / 5</div>
+      </div>
+      <div class="slots" id="slotsBox"></div>
+    </div>
+
+    <button class="submit-btn" id="judgeBtn">⚖️ PASSER DEVANT LA JUGE</button>
+  </div>
+
+  <div class="receipt-modal" id="resultView">
+    <div class="receipt" id="receiptCard">
+      <div class="r-head">
+        <h2>TRIBUNAL DU STYLE</h2>
+        <p id="rMeta">DIMANCHE CHEZ SA MÈRE · VERDICT OFFICIEL</p>
+      </div>
+      <div class="r-score-box">
+        <span id="rScoreLabel">NOTE FINALE</span>
+        <span class="num" id="rScore">4,1 / 10</span>
+      </div>
+      <div id="rLines"></div>
+      <div class="r-roast" id="rRoast"></div>
+      <div class="r-token" id="rToken"></div>
+    </div>
+    <div class="actions">
+      <button class="btn-sec" id="copyBtn">📋 Copier mon verdict</button>
+      <button class="submit-btn" id="retryBtn" style="padding:13px;font-size:14px">🔄 Défendre mon goût</button>
+    </div>
+  </div>
+</div>
+<script>
+const I18N = {
+  fr: {
+    kicker: "THÈME DU JOUR · MOYENNE DU FIL : 6,4/10",
+    title: "Dimanche midi chez sa mère (elle juge dès l'entrée)",
+    sub: "40 secondes · 5 pièces · Si le sac matche les chaussures, sa sœur vote non.",
+    mTag: "TON LOOK",
+    judgeBtn: "⚖️ PASSER DEVANT LA JUGE",
+    scoreLabel: "NOTE FINALE",
+    copyBtn: "📋 Copier pour le fil",
+    copied: "✅ Copié ! Colle-le en commentaire",
+    retryBtn: "🔄 Rejouer (40s)",
+    tokenPrefix: "👇 Balance en commentaire : ",
+    cats: [
+      {name:"1. Veste / Manteau", opts:[
+        {e:"🧥", t:"Trench beige", s:1.2, r:"Trench beige : « prête à déclarer ses impôts » (-1,8)"},
+        {e:"🖤", t:"Blazer oversize", s:2.3, r:"Blazer noir : armure anti-belle-mère validée (+2,3)"},
+        {e:"🧶", t:"Cardigan cachemire", s:1.9, r:"Cardigan doux : tentative de corruption évidente (+1,9)"}
+      ]},
+      {name:"2. Haut", opts:[
+        {e:"👚", t:"Col roulé écru", s:2.2, r:"Col roulé : zéro prise de risque, très diplomatique (+2,2)"},
+        {e:"✨", t:"Top satiné", s:0.8, r:"Top satiné à midi : sa mère a resserré son collier (-2,1)"},
+        {e:"👔", t:"Chemise rayée", s:1.7, r:"Chemise : « un ticket de caisse avec des jambes » (+1,7)"}
+      ]},
+      {name:"3. Bas", opts:[
+        {e:"👖", t:"Jean droit brut", s:2.1, r:"Jean brut : propre, mais elle a vu l'ourlet (+2,1)"},
+        {e:"👗", t:"Jupe midi plissée", s:1.5, r:"Jupe midi : trop d'efforts, ça sent le piège (+1,5)"},
+        {e:"🖤", t:"Pantalon tailleur", s:2.0, r:"Pantalon tailleur : tu viens négocier un héritage (+2,0)"}
+      ]},
+      {name:"4. Chaussures", opts:[
+        {e:"👞", t:"Mocassins cuir", s:2.2, r:"Mocassins : le parquet ancien te remercie (+2,2)"},
+        {e:"👠", t:"Talons 10 cm", s:0.7, r:"Talons 10 cm sur les pavés : crime sonore (-2,3)"},
+        {e:"👟", t:"Baskets blanches", s:1.4, r:"Baskets au rôti du dimanche : audace dangereuse (+1,4)"}
+      ]},
+      {name:"5. Sac & Détail", opts:[
+        {e:"👜", t:"Sac structuré", s:1.1, r:"Sac assorti aux chaussures : la sœur a déjà voté non (-1,4)"},
+        {e:"💐", t:"Cabas + Pivoines", s:2.4, r:"Bouquet de pivoines : immunité diplomatique (+2,4)"},
+        {e:"🕶️", t:"Mini-sac + Lunettes", s:0.9, r:"Lunettes sur la tête à table : élimination directe (-2,0)"}
+      ]}
+    ],
+    verdicts: [
+      {max:6.0, text:"VERDICT : « Un ticket de caisse avec des jambes. » Sa mère a servi le dessert en silence."},
+      {max:8.2, text:"VERDICT : « Polie mais suspecte. » Tu as survécu au rôti, mais la sœur t'observe."},
+      {max:10, text:"VERDICT : « Reine du dimanche. » Sa mère t'a donné la recette secrète de la tarte."}
+    ]
+  },
+  es: {
+    kicker: "TEMA DEL DÍA · MEDIA DEL HILO: 6,4/10",
+    title: "Domingo a comer con su madre (te mira de arriba abajo)",
+    sub: "40 segundos · 5 prendas · Si el bolso combina con los zapatos, su hermana vota no.",
+    mTag: "TU LOOK",
+    judgeBtn: "⚖️ PASAR POR LA JUEZA",
+    scoreLabel: "NOTA FINAL",
+    copyBtn: "📋 Copiar mi veredicto",
+    copied: "✅ ¡Copiado! Pégalo en comentarios",
+    retryBtn: "🔄 Defender mi gusto",
+    tokenPrefix: "👇 Pon en comentarios: ",
+    cats: [
+      {name:"1. Abrigo / Chaqueta", opts:[
+        {e:"🧥", t:"Gabardina beige", s:1.2, r:"Gabardina: «lista para hacer la declaración de la renta» (-1,8)"},
+        {e:"🖤", t:"Blazer oversize", s:2.3, r:"Blazer negro: escudo antisuegra aprobado (+2,3)"},
+        {e:"🧶", t:"Cárdigan punto", s:1.9, r:"Cárdigan suave: soborno emocional detectado (+1,9)"}
+      ]},
+      {name:"2. Parte de arriba", opts:[
+        {e:"👚", t:"Cuello alto crudo", s:2.2, r:"Cuello alto: diplomacia pura (+2,2)"},
+        {e:"✨", t:"Top lencero", s:0.8, r:"Top satinado a las 2 PM: silencio en la mesa (-2,1)"},
+        {e:"👔", t:"Camisa rayas", s:1.7, r:"Camisa: «un ticket con piernas» (+1,7)"}
+      ]},
+      {name:"3. Pantalón / Falda", opts:[
+        {e:"👖", t:"Vaquero recto", s:2.1, r:"Vaquero recto: digno y sin dramas (+2,1)"},
+        {e:"👗", t:"Falda midi", s:1.5, r:"Falda midi: demasiado perfecta, sospechoso (+1,5)"},
+        {e:"🖤", t:"Pantalón sastre", s:2.0, r:"Pantalón sastre: vienes a firmar un contrato (+2,0)"}
+      ]},
+      {name:"4. Calzado", opts:[
+        {e:"👞", t:"Mocasines piel", s:2.2, r:"Mocasines: el parquet respira tranquilo (+2,2)"},
+        {e:"👠", t:"Tacón 10 cm", s:0.7, r:"Tacón de aguja en domingo: delito acústico (-2,3)"},
+        {e:"👟", t:"Zapatillas blancas", s:1.4, r:"Zapatillas en la paella del domingo: riesgo extremo (+1,4)"}
+      ]},
+      {name:"5. Bolso y Toque", opts:[
+        {e:"👜", t:"Bolso a juego", s:1.1, r:"Bolso igual que los zapatos: la hermana ya votó no (-1,4)"},
+        {e:"💐", t:"Capazo + Flores", s:2.4, r:"Ramo de flores: inmunidad diplomática (+2,4)"},
+        {e:"🕶️", t:"Mini bolso + Gafas", s:0.9, r:"Gafas en la cabeza dentro de casa: expulsión (-2,0)"}
+      ]}
+    ],
+    verdicts: [
+      {max:6.0, text:"VEREDICTO: «Un ticket de compra con piernas.» Su madre sirvió el postre en silencio."},
+      {max:8.2, text:"VEREDICTO: «Educada pero sospechosa.» Sobreviviste al primer plato."},
+      {max:10, text:"VEREDICTO: «Reina del domingo.» Su madre te dio tuppers para toda la semana."}
+    ]
+  },
+  de: {
+    kicker: "THEMA HEUTE · SCHNITT IM THREAD: 6,4/10",
+    title: "Sonntagsessen bei seiner Mutter (sie scannt dich in 2 Sekunden)",
+    sub: "40 Sekunden · 5 Teile · Wenn Tasche und Schuhe matchen, stimmt seine Schwester mit Nein.",
+    mTag: "DEIN LOOK",
+    judgeBtn: "⚖️ ZUR JURY",
+    scoreLabel: "ENDNOTE",
+    copyBtn: "📋 Urteil kopieren",
+    copied: "✅ Kopiert! Ab in die Kommentare",
+    retryBtn: "🔄 Nochmal (40s)",
+    tokenPrefix: "👇 Poste im Kommentar: ",
+    cats: [
+      {name:"1. Mantel / Jacke", opts:[
+        {e:"🧥", t:"Trenchcoat", s:1.2, r:"Trenchcoat: »Sieht aus wie Steuererklärung auf zwei Beinen« (-1,8)"},
+        {e:"🖤", t:"Oversize-Blazer", s:2.3, r:"Blazer: Schwiegermutter-Schutzschild aktiv (+2,3)"},
+        {e:"🧶", t:"Kaschmir-Cardigan", s:1.9, r:"Cardigan: Charme-Offensive erkannt (+1,9)"}
+      ]},
+      {name:"2. Oberteil", opts:[
+        {e:"👚", t:"Rollkragen", s:2.2, r:"Rollkragen: diplomatisch unangreifbar (+2,2)"},
+        {e:"✨", t:"Satin-Top", s:0.8, r:"Satin-Top um 12 Uhr: Eiszeit am Tisch (-2,1)"},
+        {e:"👔", t:"Streifenhemd", s:1.7, r:"Streifenhemd: »Ein Kassenbon mit Beinen« (+1,7)"}
+      ]},
+      {name:"3. Hose / Rock", opts:[
+        {e:"👖", t:"Gerade Jeans", s:2.1, r:"Jeans: solide und ehrlich (+2,1)"},
+        {e:"👗", t:"Midirock", s:1.5, r:"Midirock: fast zu brav (+1,5)"},
+        {e:"🖤", t:"Stoffhose", s:2.0, r:"Stoffhose: bereit für die Erbschaftsdebatte (+2,0)"}
+      ]},
+      {name:"4. Schuhe", opts:[
+        {e:"👞", t:"Loafer", s:2.2, r:"Loafer: das Parkett liebt dich (+2,2)"},
+        {e:"👠", t:"10cm Heels", s:0.7, r:"10cm Absätze am Sonntag: Lärmbelästigung (-2,3)"},
+        {e:"👟", t:"Weiße Sneaker", s:1.4, r:"Sneaker zum Sonntagsbraten: mutig (+1,4)"}
+      ]},
+      {name:"5. Tasche & Extra", opts:[
+        {e:"👜", t:"Passende Tasche", s:1.1, r:"Tasche matcht Schuhe: Schwester stimmt mit Nein (-1,4)"},
+        {e:"💐", t:"Tote + Blumen", s:2.4, r:"Frische Pfingstrosen: diplomatische Immunität (+2,4)"},
+        {e:"🕶️", t:"Mini-Bag + Brille", s:0.9, r:"Sonnenbrille im Haar am Tisch: Disqualifikation (-2,0)"}
+      ]}
+    ],
+    verdicts: [
+      {max:6.0, text:"URTEIL: »Ein Kassenbon mit Beinen.« Seine Mutter hat schweigend abgeräumt."},
+      {max:8.2, text:"URTEIL: »Höflich, aber unter Beobachtung.« Du hast den Braten überlebt."},
+      {max:10, text:"URTEIL: »Sonntags-Legende.« Seine Mutter hat dir Kuchen eingepackt."}
+    ]
+  },
+  en: {
+    kicker: "TODAY'S THEME · THREAD AVERAGE: 6.4/10",
+    title: "Sunday lunch at his mum's (she grades you at the door)",
+    sub: "40 seconds · 5 slots · If the bag matches the shoes, his sister already voted no.",
+    mTag: "YOUR FIT",
+    judgeBtn: "⚖️ FACE THE JUDGE",
+    scoreLabel: "FINAL SCORE",
+    copyBtn: "📋 Copy my verdict",
+    copied: "✅ Copied! Paste it in the comments",
+    retryBtn: "🔄 Defend my taste",
+    tokenPrefix: "👇 Drop in the comments: ",
+    cats: [
+      {name:"1. Coat / Jacket", opts:[
+        {e:"🧥", t:"Beige Trench", s:1.2, r:"Beige trench: 'Looks ready to file a tax return' (-1.8)"},
+        {e:"🖤", t:"Oversized Blazer", s:2.3, r:"Black blazer: mother-in-law armour approved (+2.3)"},
+        {e:"🧶", t:"Cashmere Cardigan", s:1.9, r:"Soft cardigan: obvious bribery attempt (+1.9)"}
+      ]},
+      {name:"2. Top", opts:[
+        {e:"👚", t:"Cream Knit", s:2.2, r:"Cream knit: zero risk, pure diplomacy (+2.2)"},
+        {e:"✨", t:"Satin Cami", s:0.8, r:"Satin at 1 PM roast: his mum clutched her pearls (-2.1)"},
+        {e:"👔", t:"Striped Shirt", s:1.7, r:"Striped shirt: 'a receipt with legs' (+1.7)"}
+      ]},
+      {name:"3. Bottom", opts:[
+        {e:"👖", t:"Straight Denim", s:2.1, r:"Clean denim: respectable, passed inspection (+2.1)"},
+        {e:"👗", t:"Pleated Midi", s:1.5, r:"Pleated midi: trying too hard (+1.5)"},
+        {e:"🖤", t:"Tailored Trousers", s:2.0, r:"Tailored trousers: negotiating the inheritance (+2.0)"}
+      ]},
+      {name:"4. Shoes", opts:[
+        {e:"👞", t:"Leather Loafers", s:2.2, r:"Loafers: the hardwood floor thanks you (+2.2)"},
+        {e:"👠", t:"10cm Stilettos", s:0.7, r:"10cm heels on cobblestones: acoustic felony (-2.3)"},
+        {e:"👟", t:"White Trainers", s:1.4, r:"Trainers at Sunday roast: dangerous gamble (+1.4)"}
+      ]},
+      {name:"5. Bag & Prop", opts:[
+        {e:"👜", t:"Matched Handbag", s:1.1, r:"Bag matches the shoes: his sister already voted no (-1.4)"},
+        {e:"💐", t:"Tote + Peonies", s:2.4, r:"Fresh peonies: diplomatic immunity unlocked (+2.4)"},
+        {e:"🕶️", t:"Micro-bag + Shades", s:0.9, r:"Sunglasses on head indoors: instant elimination (-2.0)"}
+      ]}
+    ],
+    verdicts: [
+      {max:6.0, text:"VERDICT: 'A receipt with legs.' His mum served dessert in dead silence."},
+      {max:8.2, text:"VERDICT: 'Polite, yet suspicious.' You survived the roast, barely."},
+      {max:10, text:"VERDICT: 'Sunday Royalty.' His mum gave you the family pie recipe."}
+    ]
+  }
+};
+
+const params = new URLSearchParams(location.search);
+let lang = (params.get("lang") || navigator.language.slice(0,2) || "fr").toLowerCase();
+if (!I18N[lang]) lang = "fr";
+let picks = [0, 0, 0, 0, 0];
+let timeLeft = 40;
+let timerId = null;
+
+function setLang(l) {
+  lang = l;
+  document.querySelectorAll(".langs button").forEach(b => b.classList.toggle("active", b.dataset.l === l));
+  renderPlay();
+}
+
+function renderPlay() {
+  const d = I18N[lang];
+  document.getElementById("tKicker").textContent = d.kicker;
+  document.getElementById("tTitle").textContent = d.title;
+  document.getElementById("tSub").textContent = d.sub;
+  document.getElementById("mTag").textContent = d.mTag;
+  document.getElementById("judgeBtn").textContent = d.judgeBtn;
+  const box = document.getElementById("slotsBox");
+  box.innerHTML = "";
+  d.cats.forEach((cat, ci) => {
+    const g = document.createElement("div");
+    g.className = "slot-group";
+    g.innerHTML = `<div class="slot-label"><span>${cat.name}</span></div>`;
+    const o = document.createElement("div");
+    o.className = "opts";
+    cat.opts.forEach((opt, oi) => {
+      const btn = document.createElement("div");
+      btn.className = "opt" + (picks[ci] === oi ? " sel" : "");
+      btn.innerHTML = `${opt.e} ${opt.t}`;
+      btn.onclick = () => { picks[ci] = oi; renderPlay(); };
+      o.appendChild(btn);
+    });
+    g.appendChild(o);
+    box.appendChild(g);
+  });
+  document.getElementById("dollPreview").innerHTML = d.cats.map((c, i) => c.opts[picks[i]].e).join("<br>");
+  document.getElementById("mCount").textContent = "5 / 5";
+}
+
+function showVerdict() {
+  clearInterval(timerId);
+  const d = I18N[lang];
+  let total = 0;
+  const lines = [];
+  const chosenNames = [];
+  d.cats.forEach((c, i) => {
+    const item = c.opts[picks[i]];
+    total += item.s;
+    lines.push(`<div class="r-line"><span>${item.e} ${item.t}</span><b>${item.s.toFixed(1)}</b></div><div style="font-size:10px;color:#6b7280;margin-bottom:4px">${item.r}</div>`);
+    chosenNames.push(item.t);
+  });
+  total = Math.min(9.8, Math.max(3.1, total));
+  const scoreStr = total.toFixed(1).replace(".", lang === "en" ? "." : ",");
+  document.getElementById("rScoreLabel").textContent = d.scoreLabel;
+  document.getElementById("rScore").textContent = `${scoreStr} / 10`;
+  document.getElementById("rLines").innerHTML = lines.join("");
+  const v = d.verdicts.find(x => total <= x.max) || d.verdicts[d.verdicts.length - 1];
+  document.getElementById("rRoast").textContent = v.text;
+  const tokenText = `${scoreStr}/10 (${chosenNames[0]} + ${chosenNames[3]})`;
+  document.getElementById("rToken").textContent = `${d.tokenPrefix}${tokenText}`;
+  document.getElementById("copyBtn").textContent = d.copyBtn;
+  document.getElementById("retryBtn").textContent = d.retryBtn;
+  document.getElementById("playView").style.display = "none";
+  document.getElementById("resultView").classList.add("show");
+  document.getElementById("copyBtn").onclick = () => {
+    navigator.clipboard?.writeText(`${scoreStr}/10 — ${chosenNames.join(" + ")} · ${v.text}`);
+    document.getElementById("copyBtn").textContent = d.copied;
+  };
+}
+
+function startTimer() {
+  clearInterval(timerId);
+  timeLeft = 40;
+  document.getElementById("timer").textContent = "00:40";
+  timerId = setInterval(() => {
+    timeLeft--;
+    if (timeLeft <= 0) { showVerdict(); return; }
+    document.getElementById("timer").textContent = "00:" + String(timeLeft).padStart(2, "0");
+  }, 1000);
+}
+
+document.querySelectorAll(".langs button").forEach(b => b.onclick = () => setLang(b.dataset.l));
+document.getElementById("judgeBtn").onclick = showVerdict;
+document.getElementById("retryBtn").onclick = () => {
+  document.getElementById("resultView").classList.remove("show");
+  document.getElementById("playView").style.display = "flex";
+  startTimer();
+};
+setLang(lang);
+startTimer();
+</script>
+</body>
+</html>

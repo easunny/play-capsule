@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>🚨 Group Chat Border Control: Spot the Red Flag in 5s</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+  body{margin:0;background:#090b10;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,monospace;min-height:100vh;display:flex;justify-content:center}
+  .app{width:100%;max-width:420px;padding:14px 16px 28px;display:flex;flex-direction:column;gap:12px}
+  .top{display:flex;justify-content:space-between;align-items:center}
+  .cam{font-size:12px;font-weight:900;color:#ef4444;background:#2a1215;border:1px solid #dc2626;padding:4px 10px;border-radius:6px;letter-spacing:.06em}
+  .langs{display:flex;gap:5px}
+  .langs button{background:#161b26;border:1px solid #2d3748;color:#94a3b8;border-radius:6px;padding:4px 9px;font-size:11px;font-weight:800;cursor:pointer}
+  .langs button.active{background:#ef4444;border-color:#ef4444;color:#fff}
+  .rule-bar{background:#18181b;border-left:4px solid #f59e0b;padding:10px 12px;border-radius:8px;font-size:12px;line-height:1.35}
+  .rule-bar b{color:#fbbf24;display:block;font-size:11px;letter-spacing:.05em}
+  .dossier{background:#111622;border:1.5px solid #2e3a52;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;position:relative}
+  .d-head{display:flex;gap:12px;align-items:center}
+  .avatar{width:68px;height:68px;border-radius:12px;background:#1e293b;display:flex;align-items:center;justify-content:center;font-size:36px;border:1px solid #475569;position:relative}
+  .d-meta h2{margin:0;font-size:18px;color:#fff}
+  .d-meta p{margin:3px 0 0;font-size:12px;color:#94a3b8}
+  .clues{display:flex;flex-direction:column;gap:7px;margin-top:4px}
+  .clue{background:#192132;border:1px solid #2d3b55;padding:9px 11px;border-radius:9px;font-size:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+  .clue.flagged{border-color:#ef4444;background:#3b161d;color:#fecaca}
+  .stamps{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+  .btn-pass{background:#065f46;border:1px solid #10b981;color:#ecfdf5;padding:14px;border-radius:12px;font-weight:900;font-size:15px;cursor:pointer}
+  .btn-reject{background:#991b1b;border:1px solid #ef4444;color:#fef2f2;padding:14px;border-radius:12px;font-weight:900;font-size:15px;cursor:pointer}
+  .report{display:none;background:#fdfbf7;color:#111;padding:18px;border-radius:12px;font-family:"Courier New",monospace}
+  .report.show{display:block}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="cam">🔴 CAM 04 · CONTRÔLE</div>
+    <div class="langs">
+      <button data-l="fr">FR</button>
+      <button data-l="es">ES</button>
+      <button data-l="de">DE</button>
+      <button data-l="en">EN</button>
+    </div>
+  </div>
+  <div id="gameBox" style="display:flex;flex-direction:column;gap:12px">
+    <div class="rule-bar"><b id="rHeader">CONSIGNE DE SÉCURITÉ</b><span id="rDesc">Touche le détail louche avant de tamponner. Si tu laisses entrer un imposteur, le groupe WhatsApp explose.</span></div>
+    <div class="dossier">
+      <div class="d-head">
+        <div class="avatar" id="pAva">🧔🏻‍♂️</div>
+        <div class="d-meta">
+          <h2 id="pName">Théo, 27 ans</h2>
+          <p id="pStep">Dossier 1 / 4</p>
+        </div>
+      </div>
+      <div class="clues" id="clueList"></div>
+    </div>
+    <div class="stamps">
+      <button class="btn-pass" id="passBtn">✅ LAISSER ENTRER</button>
+      <button class="btn-reject" id="rejBtn">🚨 RECALER</button>
+    </div>
+  </div>
+  <div class="report" id="reportBox">
+    <h2 style="margin:0 0 6px;font-size:18px" id="repTitle">RAPPORT D'INCIDENT</h2>
+    <p id="repSummary" style="font-size:13px;font-weight:700"></p>
+    <div id="repLog" style="font-size:12px;border-top:1px dashed #111;border-bottom:1px dashed #111;padding:10px 0;margin:10px 0;line-height:1.5"></div>
+    <div id="repToken" style="background:#fee2e2;color:#991b1b;padding:10px;border-radius:6px;font-family:-apple-system,sans-serif;font-size:12px;font-weight:800;text-align:center"></div>
+    <button class="btn-reject" id="restartBtn" style="width:100%;margin-top:12px">🔄 Nouveau contrôle</button>
+  </div>
+</div>
+<script>
+const DATA = {
+  fr: {
+    rHeader:"RÈGLE DU POSTE FRONTIÈRE",
+    rDesc:"Touche l'indice qui trahit le dossier, puis tamponne. « Mauvaise vibe » ne compte pas.",
+    pass:"✅ LAISSER ENTRER", rej:"🚨 RECALER",
+    profiles:[
+      {ava:"🕶️", name:"Théo, 27 ans · « Entrepreneur »", bad:true, tell:1, clues:[
+        "📸 Photo 1 : Café en terrasse dans le Marais",
+        "🔍 Reflet lunettes : un 2e iPhone ouvert sur Tinder",
+        "🎵 Bio : « J'adore les voyages et la simplicité »"
+      ], leak:"Un 2e téléphone dans le reflet des lunettes"},
+      {ava:"😇", name:"Julien, 29 ans · Architecte", bad:false, tell:-1, clues:[
+        "📸 Photo 1 : Son chien avec un bandana",
+        "🏠 Appartement : draps repassés, plantes vivantes",
+        "📱 Horaires : répond en 4 minutes même le samedi"
+      ], leak:"Dossier 100% propre (tu as recalé le seul mec bien)"},
+      {ava:"🎸", name:"Maxime, 26 ans · « Musicien »", bad:true, tell:2, clues:[
+        "📸 Photo 1 : Sourire ultra-bright au coucher de soleil",
+        "📍 Localisation : à 2 km",
+        "🗣️ Langues parlées : « Français, Anglais, couramment les meufs »"
+      ], leak:"Langue parlée : « couramment les meufs »"},
+      {ava:"🤵🏻", name:" Nicolas, 31 ans · Consultant", bad:true, tell:0, clues:[
+        "🖐️ Main gauche : marque de bronzage d'alliance très nette",
+        "🍷 Passion : « Œnologie et course à pied »",
+        "✈️ Dernier voyage : Lisbonne entre amis"
+      ], leak:"Marque de bronzage d'alliance sur l'annulaire"}
+    ]
+  },
+  es: {
+    rHeader:"CONTROL DE ADUANA DEL GRUPO",
+    rDesc:"Toca la pista que lo delata antes de sellar. «Mala vibra» no vale.",
+    pass:"✅ DEJAR PASAR", rej:"🚨 RECHAZAR",
+    profiles:[
+      {ava:"🕶️", name:"Mateo, 27 · «Emprendedor»", bad:true, tell:1, clues:[
+        "📸 Foto 1: Café de especialidad en Malasaña",
+        "🔍 Reflejo en gafas: un 2º móvil abierto en otra app",
+        "🎵 Bio: «Me gusta fluir y viajar»"
+      ], leak:"Segundo móvil en el reflejo de las gafas"},
+      {ava:"😇", name:"Lucas, 29 · Arquitecto", bad:false, tell:-1, clues:[
+        "📸 Foto 1: Su perro con pañuelo",
+        "🏠 Casa: plantas vivas y sábanas limpias",
+        "📱 Responde en 4 minutos un sábado por la noche"
+      ], leak:"Era el único limpio (rechazaste al correcto)"},
+      {ava:"🎸", name:"Dani, 26 · «Músico»", bad:true, tell:2, clues:[
+        "📸 Foto 1: Sonrisa en la playa",
+        "📍 A 2 km de distancia",
+        "🗣️ Idiomas: «Español, Inglés, fluido en tías»"
+      ], leak:"Idioma: «fluido en tías»"},
+      {ava:"🤵🏻", name:"Javier, 31 · Consultor", bad:true, tell:0, clues:[
+        "🖐️ Mano izquierda: marca blanca de anillo de casado",
+        "🍷 Vino de autor y maratones",
+        "✈️ Último viaje: Lisboa con amigos"
+      ], leak:"Marca de anillo de boda en el dedo"}
+    ]
+  },
+  de: {
+    rHeader:"GRENZKONTROLLE FÜR DEN GRUPPENCHAT",
+    rDesc:"Tippe auf das verräterische Detail und stemple ab. »Schlechte Vibes« zählen nicht.",
+    pass:"✅ DURCHLASSEN", rej:"🚨 ABWEISEN",
+    profiles:[
+      {ava:"🕶️", name:"Leon, 27 · »Gründer«", bad:true, tell:1, clues:[
+        "📸 Foto 1: Hafer-Cappuccino in Mitte",
+        "🔍 Sonnenbrillen-Spiegelung: Zweithandy mit Dating-App",
+        "🎵 Bio: »Kein Drama, nur gute Energie«"
+      ], leak:"Zweithandy in der Sonnenbrille"},
+      {ava:"😇", name:"Jonas, 29 · Architekt", bad:false, tell:-1, clues:[
+        "📸 Foto 1: Hund mit Halstuch",
+        "🏠 Wohnung: echte Pflanzen, Bücherregal",
+        "📱 Antwortet auch samstags in 4 Minuten"
+      ], leak:"100% sauber (du hast den Guten abgewiesen)"},
+      {ava:"🎸", name:"Finn, 26 · »DJ & Artist«", bad:true, tell:2, clues:[
+        "📸 Foto 1: Sonnenuntergang auf dem Dach",
+        "📍 2 km entfernt",
+        "🗣️ Sprachen: »Deutsch, Englisch, fließend Frauen«"
+      ], leak:"Sprache: »fließend Frauen«"},
+      {ava:"🤵🏻", name:"Niklas, 31 · Berater", bad:true, tell:0, clues:[
+        "🖐️ Linke Hand: heller Abdruck vom Ehering",
+        "🍷 Naturwein & Halbmarathon",
+        "✈️ Lissabon-Trip mit den Jungs"
+      ], leak:"Ehering-Abdruck am Ringfinger"}
+    ]
+  },
+  en: {
+    rHeader:"GROUP CHAT BORDER CONTROL",
+    rDesc:"Tap the detail that gives him away, then stamp. 'Bad vibes' doesn't count.",
+    pass:"✅ STAMP IN", rej:"🚨 REJECT",
+    profiles:[
+      {ava:"🕶️", name:"Leo, 27 · 'Founder'", bad:true, tell:1, clues:[
+        "📸 Photo 1: Oat flat white in Shoreditch",
+        "🔍 Sunglasses reflection: a 2nd phone on Hinge",
+        "🎵 Bio: 'Here for a good time, low drama'"
+      ], leak:"2nd phone hiding in the sunglasses reflection"},
+      {ava:"😇", name:"Sam, 29 · Architect", bad:false, tell:-1, clues:[
+        "📸 Photo 1: Golden retriever in a bandana",
+        "🏠 Flat: alive plants, actual bedframe",
+        "📱 Texts back in 4 mins on a Saturday night"
+      ], leak:"Clean profile (you rejected the only decent one)"},
+      {ava:"🎸", name:"Max, 26 · 'Musician'", bad:true, tell:2, clues:[
+        "📸 Photo 1: Rooftop smirk at golden hour",
+        "📍 2 miles away",
+        "🗣️ Languages: 'English, French, fluent in girls'"
+      ], leak:"Listed 'fluent in girls' as a language"},
+      {ava:"🤵🏻", name:"James, 31 · Consultant", bad:true, tell:0, clues:[
+        "🖐️ Left hand: fresh wedding ring tan line",
+        "🍷 Natural wine & Sunday 10k runs",
+        "✈️ Lisbon boys' trip"
+      ], leak:"Wedding ring tan line on left hand"}
+    ]
+  }
+};
+const params = new URLSearchParams(location.search);
+let lang = (params.get("lang") || navigator.language.slice(0,2) || "fr").toLowerCase();
+if (!DATA[lang]) lang = "fr";
+let idx = 0, flagged = -1, log = [], score = 0;
+
+function setLang(l) {
+  lang = l; idx = 0; log = []; score = 0;
+  document.querySelectorAll(".langs button").forEach(b => b.classList.toggle("active", b.dataset.l === l));
+  document.getElementById("reportBox").classList.remove("show");
+  document.getElementById("gameBox").style.display = "flex";
+  render();
+}
+function render() {
+  const d = DATA[lang];
+  const p = d.profiles[idx];
+  flagged = -1;
+  document.getElementById("rHeader").textContent = d.rHeader;
+  document.getElementById("rDesc").textContent = d.rDesc;
+  document.getElementById("passBtn").textContent = d.pass;
+  document.getElementById("rejBtn").textContent = d.rej;
+  document.getElementById("pAva").textContent = p.ava;
+  document.getElementById("pName").textContent = p.name;
+  document.getElementById("pStep").textContent = `${idx + 1} / ${d.profiles.length}`;
+  const list = document.getElementById("clueList");
+  list.innerHTML = "";
+  p.clues.forEach((c, ci) => {
+    const row = document.createElement("div");
+    row.className = "clue";
+    row.innerHTML = `<span>${c}</span><b>🔍</b>`;
+    row.onclick = () => {
+      flagged = ci;
+      document.querySelectorAll(".clue").forEach((el, i) => el.classList.toggle("flagged", i === ci));
+    };
+    list.appendChild(row);
+  });
+}
+function judge(letIn) {
+  const p = DATA[lang].profiles[idx];
+  const ok = (letIn && !p.bad) || (!letIn && p.bad);
+  if (ok) score++;
+  log.push(`${ok ? "✅" : "💀"} <b>${p.name.split("·")[0]}</b>: ${p.leak}`);
+  idx++;
+  if (idx >= DATA[lang].profiles.length) {
+    document.getElementById("gameBox").style.display = "none";
+    const rep = document.getElementById("reportBox");
+    rep.classList.add("show");
+    document.getElementById("repSummary").textContent = `SCORE : ${score} / 4 DOSSIERS`;
+    document.getElementById("repLog").innerHTML = log.join("<br>");
+    document.getElementById("repToken").textContent = `👇 Commente ton score (${score}/4) + le détail qui t'a piégée !`;
+  } else {
+    render();
+  }
+}
+document.querySelectorAll(".langs button").forEach(b => b.onclick = () => setLang(b.dataset.l));
+document.getElementById("passBtn").onclick = () => judge(true);
+document.getElementById("rejBtn").onclick = () => judge(false);
+document.getElementById("restartBtn").onclick = () => setLang(lang);
+setLang(lang);
+</script>
+</body>
+</html>

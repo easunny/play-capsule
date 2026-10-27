@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>&#127922; Ruleta Caja n.&#186; 6: &#191;500 &#8364; o trampa?</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Play Capsule">
+<meta property="og:title" content="&#127922; Ruleta Caja n.&#186; 6: &#191;500 &#8364; o trampa?">
+<meta property="og:description" content="6 cajas en la mesa: &#191;abres para ti o se la pasas al crupier?">
+<meta name="description" content="6 cajas en la mesa: &#191;abres para ti o se la pasas al crupier?">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+  body{margin:0;background:#09080c;color:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,monospace;min-height:100vh;display:flex;justify-content:center}
+  .app{width:100%;max-width:420px;padding:14px 16px 28px;display:flex;flex-direction:column;gap:12px}
+  .top{display:flex;justify-content:space-between;align-items:center}
+  .badge{background:#2e1015;border:1px solid #dc2626;color:#fca5a5;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:900}
+  .langs{display:flex;gap:5px}
+  .langs button{background:#181622;border:1px solid #332d4b;color:#94a3b8;border-radius:6px;padding:4px 9px;font-size:11px;font-weight:800;cursor:pointer}
+  .langs button.active{background:#dc2626;border-color:#dc2626;color:#fff}
+  .dealer-box{background:linear-gradient(180deg,#1a1118,#0f0c14);border:1.5px solid #4c1d24;border-radius:16px;padding:14px;text-align:center}
+  .dealer-face{font-size:48px;line-height:1}
+  .dealer-speech{margin-top:8px;font-size:13px;font-weight:800;color:#fecdd3;min-height:36px}
+  .hud{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center}
+  .hud-card{background:#14121d;border:1px solid #2d2640;border-radius:10px;padding:8px}
+  .hud-card span{display:block;font-size:10px;color:#94a3b8}
+  .hud-card b{font-size:18px;color:#fff}
+  .chamber{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:4px 0}
+  .box{background:#1c1829;border:2px solid #3b3254;border-radius:14px;padding:16px 8px;text-align:center;font-size:28px;cursor:pointer;transition:.15s}
+  .box.opened-safe{background:#064e3b;border-color:#10b981;cursor:default}
+  .box.opened-Trap{background:#7f1d1d;border-color:#ef4444;cursor:default}
+  .mode-bar{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .mode-btn{padding:12px;border-radius:12px;font-weight:900;font-size:13px;cursor:pointer;border:1.5px solid transparent}
+  .mode-self{background:#1e293b;color:#e2e8f0;border-color:#475569}
+  .mode-self.active{background:#065f46;border-color:#10b981;color:#fff}
+  .mode-dealer{background:#1e293b;color:#e2e8f0;border-color:#475569}
+  .mode-dealer.active{background:#7f1d1d;border-color:#ef4444;color:#fff}
+  .modal{display:none;background:#fdfbf7;color:#111;border-radius:12px;padding:18px;font-family:"Courier New",monospace}
+  .modal.show{display:block}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="badge" id="bTitle">🎲 ROULETTE CAISSE N°6</div>
+    <div class="langs">
+      <button data-l="fr">FR</button>
+      <button data-l="es">ES</button>
+      <button data-l="de">DE</button>
+      <button data-l="en">EN</button>
+    </div>
+  </div>
+  <div id="playArea" style="display:flex;flex-direction:column;gap:12px">
+    <div class="dealer-box">
+      <div class="dealer-face" id="dFace">🕴️</div>
+      <div class="dealer-speech" id="dSpeech">« 6 boîtes sur le tapis : 4 contiennent du cash, 2 contiennent une bombe. Tu ouvres pour toi ou tu me la donnes ? »</div>
+    </div>
+    <div class="hud">
+      <div class="hud-card"><span id="hLifeL">TES VIES</span><b id="hLife">❤️❤️</b></div>
+      <div class="hud-card"><span id="hCashL">CAGNOTTE</span><b id="hCash">0 €</b></div>
+      <div class="hud-card"><span id="hOddsL">PIÈGES RESTANTS</span><b id="hOdds" style="color:#f87171">2 / 6</b></div>
+    </div>
+    <div class="mode-bar">
+      <button class="mode-btn mode-self active" id="mSelf">🤲 OUVRIR POUR MOI (+500€)</button>
+      <button class="mode-btn mode-dealer" id="mDealer">👉 POUSSER AU CROUPIER</button>
+    </div>
+    <div class="chamber" id="grid"></div>
+  </div>
+  <div class="modal" id="endModal">
+    <h2 style="margin:0 0 6px;font-size:19px" id="eHead">TICKET DE SORTIE</h2>
+    <p id="eSub" style="font-size:13px;font-weight:800;color:#991b1b"></p>
+    <div id="eStats" style="border-top:1px dashed #111;border-bottom:1px dashed #111;padding:10px 0;margin:10px 0;font-size:13px;line-height:1.5"></div>
+    <div id="eToken" style="background:#fef3c7;padding:10px;border-radius:6px;font-family:-apple-system,sans-serif;font-size:12px;font-weight:800;text-align:center"></div>
+    <button id="againBtn" style="width:100%;margin-top:12px;padding:14px;border:none;border-radius:10px;background:#dc2626;color:#fff;font-weight:900;font-size:15px;cursor:pointer">🔄 Relancer la table</button>
+  </div>
+</div>
+<script>
+const TXT = {
+  fr:{
+    init:"« 6 boîtes : 4 billets de 500 €, 2 pièges. Choisis qui ouvre, puis touche une boîte. »",
+    life:"TES VIES", cash:"CAGNOTTE", odds:"PIÈGES RESTANTS",
+    self:"🤲 OUVRIR POUR MOI (+500€)", dealer:"👉 DONNER AU CROUPIER",
+    hitSafeSelf:"💎 +500 € ! Le croupier transpire. Tu continues ou tu t'arrêtes ?",
+    hitTrapSelf:"💥 BOUM ! La boîte n°%d était piégée. Tu perds 1 vie.",
+    hitSafeDealer:"😒 Tu as donné 500 € au croupier… il te remercie en souriant.",
+    hitTrapDealer:"🔥 GÉNIE ! Le croupier a pris le piège n°%d en pleine figure ! (+1 000 € bonus)",
+    dead:"MORT PAR AVARICE À %d €", win:"TABLE NETTOYÉE : %d € EN POCHE",
+    token:"👇 Balance ton score (%d €) + la boîte qui t'a explosé en commentaire !"
+  },
+  es:{
+    init:"« 6 cajas: 4 con 500 €, 2 con trampa. ¿Abres para ti o se la pasas al crupier? »",
+    life:"TUS VIDAS", cash:"BOTÍN", odds:"TRAMPAS",
+    self:"🤲 ABRIR PARA MÍ (+500€)", dealer:"👉 PASAR AL CRUPIER",
+    hitSafeSelf:"💎 ¡+500 €! El crupier suda frío.",
+    hitTrapSelf:"💥 ¡BUM! La caja n°%d tenía trampa. Pierdes 1 vida.",
+    hitSafeDealer:"😒 Le regalaste 500 € al crupier…",
+    hitTrapDealer:"🔥 ¡MAESTRO! El crupier se comió la trampa n°%d (+1.000 € extra)",
+    dead:"MUERTO POR CODICIA CON %d €", win:"MESA LIMPIA: %d € GANADOS",
+    token:"👇 ¡Pon en comentarios cuánto ganaste (%d €) y qué caja te explotó!"
+  },
+  de:{
+    init:"» 6 Boxen: 4× 500 €, 2 Fallen. Öffnest du selbst oder schiebst du sie dem Dealer zu? «",
+    life:"LEBEN", cash:"BEUTE", odds:"FALLEN ÜBRIG",
+    self:"🤲 FÜR MICH ÖFFNEN (+500€)", dealer:"👉 DEM DEALER GEBEN",
+    hitSafeSelf:"💎 +500 €! Der Dealer wird nervös.",
+    hitTrapSelf:"💥 BUMM! Box Nr. %d war eine Falle. -1 Leben.",
+    hitSafeDealer:"😒 Du hast dem Dealer 500 € geschenkt…",
+    hitTrapDealer:"🔥 EISKALT! Der Dealer tappt in Falle Nr. %d! (+1.000 € Bonus)",
+    dead:"DURCH GIER GEFALLEN BEI %d €", win:"TISCH GERÄUMT: %d €",
+    token:"👇 Poste deinen Gewinn (%d €) + welche Box dich erwischt hat!"
+  },
+  en:{
+    init:"'6 boxes on the counter: 4 hold €500, 2 hold a trap. Open for yourself or push it to the dealer?'",
+    life:"LIVES", cash:"BANK", odds:"TRAPS LEFT",
+    self:"🤲 OPEN FOR ME (+€500)", dealer:"👉 PUSH TO DEALER",
+    hitSafeSelf:"💎 +€500! The dealer's eye just twitched.",
+    hitTrapSelf:"💥 BOOM! Box #%d was rigged. You lose 1 life.",
+    hitSafeDealer:"😒 You just handed the dealer €500… he says thanks.",
+    hitTrapDealer:"🔥 COLD BLOODED! Dealer ate Trap #%d! (+€1,000 bonus)",
+    dead:"KILLED BY GREED AT €%d", win:"TABLE CLEARED: €%d CASHED",
+    token:"👇 Drop your bank (€%d) + the box number that ended you in the comments!"
+  }
+};
+const params = new URLSearchParams(location.search);
+let lang = (params.get("lang") || navigator.language.slice(0,2) || "fr").toLowerCase();
+if (!TXT[lang]) lang = "fr";
+let target = "self", lives = 2, cash = 0, boxes = [], opened = 0, killerBox = 0;
+
+function initGame() {
+  const t = TXT[lang];
+  document.querySelectorAll(".langs button").forEach(b => b.classList.toggle("active", b.dataset.l === lang));
+  lives = 2; cash = 0; opened = 0; killerBox = 0; target = "self";
+  boxes = [false, false, false, false, true, true].sort(() => Math.random() - 0.5);
+  document.getElementById("playArea").style.display = "flex";
+  document.getElementById("endModal").classList.remove("show");
+  document.getElementById("dFace").textContent = "🕴️";
+  document.getElementById("dSpeech").textContent = t.init;
+  document.getElementById("hLifeL").textContent = t.life;
+  document.getElementById("hCashL").textContent = t.cash;
+  document.getElementById("hOddsL").textContent = t.odds;
+  document.getElementById("mSelf").textContent = t.self;
+  document.getElementById("mDealer").textContent = t.dealer;
+  setMode("self");
+  updateHud();
+  const g = document.getElementById("grid");
+  g.innerHTML = "";
+  boxes.forEach((isTrap, i) => {
+    const el = document.createElement("div");
+    el.className = "box";
+    el.textContent = `📦 #${i+1}`;
+    el.onclick = () => pickBox(i, el);
+    g.appendChild(el);
+  });
+}
+function setMode(m) {
+  target = m;
+  document.getElementById("mSelf").classList.toggle("active", m === "self");
+  document.getElementById("mDealer").classList.toggle("active", m === "dealer");
+}
+function updateHud() {
+  document.getElementById("hLife").textContent = "❤️".repeat(lives) || "💀";
+  document.getElementById("hCash").textContent = `${cash} €`;
+  const remBoxes = boxes.filter((_, i) => !document.getElementById("grid")?.children[i]?.dataset.done);
+  const remTraps = boxes.filter((b, i) => b && !document.getElementById("grid")?.children[i]?.dataset.done).length;
+  document.getElementById("hOdds").textContent = `${remTraps} / ${remBoxes.length || 6}`;
+}
+function pickBox(i, el) {
+  if (el.dataset.done) return;
+  el.dataset.done = "1";
+  opened++;
+  const isTrap = boxes[i];
+  const t = TXT[lang];
+  if (!isTrap) {
+    el.className = "box opened-safe";
+    el.textContent = "💶 500€";
+    if (target === "self") {
+      cash += 500;
+      document.getElementById("dFace").textContent = "😬";
+      document.getElementById("dSpeech").textContent = t.hitSafeSelf;
+    } else {
+      document.getElementById("dFace").textContent = "😏";
+      document.getElementById("dSpeech").textContent = t.hitSafeDealer;
+    }
+  } else {
+    el.className = "box opened-Trap";
+    el.textContent = "💣 BOUM";
+    if (target === "self") {
+      lives--;
+      killerBox = i + 1;
+      document.getElementById("dFace").textContent = "😈";
+      document.getElementById("dSpeech").textContent = t.hitTrapSelf.replace("%d", i+1);
+    } else {
+      cash += 1000;
+      document.getElementById("dFace").textContent = "🤯";
+      document.getElementById("dSpeech").textContent = t.hitTrapDealer.replace("%d", i+1);
+    }
+  }
+  updateHud();
+  if (lives <= 0 || opened >= 6) {
+    setTimeout(finishGame, 550);
+  }
+}
+function finishGame() {
+  const t = TXT[lang];
+  document.getElementById("playArea").style.display = "none";
+  const m = document.getElementById("endModal");
+  m.classList.add("show");
+  document.getElementById("eSub").textContent = (lives <= 0 ? t.dead : t.win).replace("%d", cash);
+  document.getElementById("eStats").innerHTML = `Boîtes ouvertes : ${opened} / 6<br>Dernière boîte fatale : #${killerBox || "Aucune (Survie 100%)"}<br>Gain final : <b>${cash} €</b>`;
+  document.getElementById("eToken").textContent = t.token.replace("%d", cash);
+}
+document.getElementById("mSelf").onclick = () => setMode("self");
+document.getElementById("mDealer").onclick = () => setMode("dealer");
+document.getElementById("againBtn").onclick = initGame;
+document.querySelectorAll(".langs button").forEach(b => b.onclick = () => { lang = b.dataset.l; initGame(); });
+initGame();
+</script>
+</body>
+</html>

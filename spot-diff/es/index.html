@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>&#128269; Test visual: el 99 % falla en la 4.&#170; diferencia</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Play Capsule">
+<meta property="og:title" content="&#128269; Test visual: el 99 % falla en la 4.&#170; diferencia">
+<meta property="og:description" content="Encuentra las diferencias y adivina las zapatillas reales de 250 &#8364;.">
+<meta name="description" content="Encuentra las diferencias y adivina las zapatillas reales de 250 &#8364;.">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:#07060b;color:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
+  body{overflow:hidden;overscroll-behavior:none}
+  button,svg,img{user-select:none;-webkit-user-select:none}
+  .app{height:100dvh;max-width:440px;margin:0 auto;display:flex;flex-direction:column;padding:8px 10px calc(8px + env(safe-area-inset-bottom));gap:6px;position:relative;overflow:hidden}
+  .top-title{font-size:15px;font-weight:900;letter-spacing:-.01em;color:#fde047;background:#161222;border:1px solid #332c49;border-radius:10px;padding:6px 10px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:0 0 auto}
+  .hud{display:flex;align-items:center;gap:8px}
+  .langs{display:flex;gap:4px;flex:0 0 auto}
+  .langs button{background:#161222;border:1px solid #332c49;color:#cbd5e1;border-radius:99px;padding:3px 8px;font-size:11px;font-weight:800;cursor:pointer}
+  .langs button.on{background:#22c55e;border-color:#22c55e;color:#052e16}
+  .lv{flex:1;min-width:0;font-size:12px;font-weight:800;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .time{font-variant-numeric:tabular-nums;font-weight:900;font-size:14px;color:#bbf7d0;background:#052e16;border:1px solid #166534;border-radius:99px;padding:3px 8px;min-width:46px;text-align:center}
+  .time.hot{color:#fecaca;background:#450a0a;border-color:#b91c1c}
+  .bar{height:5px;border-radius:99px;background:#1c1830;overflow:hidden;flex:0 0 auto}
+  .bar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#4ade80,#22c55e);transform-origin:left center}
+  .bar i.hot{background:linear-gradient(90deg,#fb7185,#ef4444)}
+  .hint{font-size:12px;line-height:1.3;color:#cbd5e1;font-weight:650;min-height:30px}
+  .pips{display:flex;gap:5px}
+  .pips b{width:18px;height:6px;border-radius:99px;background:#2a243c;display:block}
+  .pips b.on{background:#4ade80}
+  .stage{flex:1;min-height:0;display:flex;flex-direction:column;position:relative}
+  .pair{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .shoe{background:#120f1c;border:1.5px solid #2a243c;border-radius:16px;padding:6px 6px 8px;display:flex;flex-direction:column;gap:2px;cursor:pointer;color:#e2e8f0;min-height:0}
+  .shoe b{font-size:11px;text-align:center;letter-spacing:.04em}
+  .shoe svg{flex:1;min-height:0;width:100%;height:100%}
+  .shoe.bad{border-color:#3f3a55}
+  .shoe.shake{animation:shake .35s linear}
+  .vs{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .card{background:#120f1c;border:1.5px solid #2a243c;border-radius:16px;padding:6px;display:flex;flex-direction:column;min-height:0;cursor:pointer;color:#fff}
+  .card .tag{display:flex;justify-content:space-between;font-size:12px;font-weight:900;padding:2px 4px 4px}
+  .card svg{flex:1;min-height:0;width:100%;border-radius:12px;background:#0c0a12}
+  .card.ok{border-color:#22c55e;box-shadow:0 0 0 1px #22c55e inset}
+  .card.no{border-color:#ef4444}
+  .reveal{position:absolute;left:0;right:0;bottom:0;z-index:2;background:#052e16;border:1px solid #166534;border-radius:12px;padding:8px 10px;font-size:12px;line-height:1.35;font-weight:700;color:#dcfce7}
+  .scenes{flex:1;min-height:0;display:flex;flex-direction:column;gap:4px}
+  .scene{flex:1;min-height:0;background:#0c4a6e;border-radius:12px;overflow:hidden;position:relative;border:1px solid #1e293b}
+  .scene svg{width:100%;height:100%;display:block}
+  .scene span{position:absolute;left:6px;top:4px;font-size:10px;font-weight:800;letter-spacing:.06em;color:#fff;background:rgba(0,0,0,.35);border-radius:99px;padding:2px 6px}
+  .end{flex:1;min-height:0;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+  .ticket{height:min(calc(100% - 96px), calc(100dvh - 200px));aspect-ratio:9/16;width:auto;max-width:100%;background:#f7f3ea;color:#1c1917;border-radius:10px;padding:10px 12px 8px;display:flex;flex-direction:column;font-family:ui-monospace,"SF Mono",Menlo,monospace;box-shadow:0 16px 40px rgba(0,0,0,.45);position:relative;overflow:hidden}
+  .ticket:before,.ticket:after{content:"";position:absolute;left:0;right:0;height:8px;background:radial-gradient(circle at 8px -2px,#07060b 7px,transparent 8px) left center/16px 12px repeat-x}
+  .ticket:before{top:-4px}.ticket:after{bottom:-4px}
+  .th{text-align:center;border-bottom:1px dashed #111;padding-bottom:4px;margin-bottom:4px}
+  .th small{display:block;font-size:9px;letter-spacing:.14em}
+  .th strong{font-size:13px;letter-spacing:.08em}
+  .score{text-align:center;font-family:-apple-system,sans-serif;font-weight:900;font-size:clamp(28px,7dvh,42px);line-height:.95;margin:4px 0 0}
+  .pct{text-align:center;font-family:-apple-system,sans-serif;font-weight:800;font-size:13px}
+  .row{display:flex;justify-content:space-between;gap:8px;font-size:11px;padding:2px 0;border-bottom:1px dotted #d6d3d1}
+  .secret{margin-top:6px;background:#fef3c7;border-left:3px solid #d97706;padding:6px 7px;font-family:-apple-system,sans-serif;font-size:11px;font-weight:800;line-height:1.3;color:#78350f}
+  .bars{margin-top:auto;display:flex;align-items:flex-end;gap:2px;height:22px;padding-top:6px}
+  .bars i{display:block;background:#111;height:100%}
+  .copy{width:min(100%,340px);border:0;border-radius:14px;padding:12px 10px;font-size:14px;font-weight:900;cursor:pointer;background:linear-gradient(90deg,#22c55e,#84cc16);color:#052e16;box-shadow:0 8px 20px rgba(34,197,94,.35)}
+  .again{width:min(100%,340px);border:1px solid #3f3a55;background:#161222;color:#e2e8f0;border-radius:12px;padding:8px;font-weight:800;font-size:12px;cursor:pointer}
+  .flash{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;pointer-events:none;font-weight:900;font-size:28px;line-height:1.05;color:#4ade80;text-shadow:0 8px 28px rgba(0,0,0,.65);opacity:0}
+  .flash.show{animation:pop .85s ease}
+  .fx{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+  .fx i{position:absolute;width:8px;height:8px;border-radius:99px;background:#4ade80}
+  @keyframes pop{0%{opacity:0;transform:scale(.7)}20%{opacity:1;transform:scale(1.05)}70%{opacity:1}100%{opacity:0;transform:scale(1.12)}}
+  @keyframes shake{25%{transform:translateX(-4px)}50%{transform:translateX(4px)}75%{transform:translateX(-3px)}}
+  [data-diff]{cursor:pointer}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top-title" id="pageTitle">🔍 99% ratent le n°4 · test d'œil streetwear</div>
+  <div class="hud">
+    <div class="langs">
+      <button data-l="fr">FR</button>
+      <button data-l="es">ES</button>
+      <button data-l="de">DE</button>
+      <button data-l="en">EN</button>
+    </div>
+    <div class="lv" id="lv"></div>
+    <div class="time" id="time">—</div>
+  </div>
+  <div class="bar"><i id="bar"></i></div>
+  <div class="hint" id="hint"></div>
+  <div class="pips" id="pips" hidden></div>
+  <div class="stage" id="stage"></div>
+  <div class="flash" id="flash"></div>
+  <div class="fx" id="fx"></div>
+</div>
+<script>
+const params = new URLSearchParams(location.search);
+let lang = (params.get("lang") || "es").toLowerCase().slice(0, 2);
+const I18N = {
+  fr: {
+    title: "99% ratent le n°4 · test d'œil streetwear",
+    l1: "Niveau 1/3 · deux paires",
+    h1: "La droite a 2 énormes défauts : une bande en moins, languette inversée. Touche-la.",
+    left: "GAUCHE", right: "DROITE",
+    pop: "+100 QI ! TROP FACILE !",
+    l2: "Niveau 2/3 · vrai ou faux · 250 €",
+    h2: "10 secondes. Laquelle est la vraie à 250 € ?",
+    detail: "DÉTAIL", price: "250 €",
+    realLine: "VRAI · points réguliers, « ATELIER » net, reflet cuir.",
+    fakeLine: "FAUX · un point rouge cassé, « ATEL1ER », cuir mat.",
+    timeout: "Temps écoulé. Le vrai était",
+    you: "Tu as choisi",
+    l3: "Niveau 3/3 · 5 différences",
+    h3: "Terrasse à Paris. Les 3 premières sont cadeaux. La 5e est cruelle.",
+    ref: "RÉFÉRENCE", find: "TROUVE LES 5",
+    ticketK: "TICKET D'ŒIL · PARIS",
+    ticketT: "STREETWEAR & SCÈNE",
+    beat: "Tu bats {p} % de l'Europe",
+    time: "Temps", rank: "Rang",
+    l2row: "Blind test 250 €",
+    yes: "repéré", no: "raté",
+    miss: "La 5e (cachée) : l'antenne au sommet de la tour Eiffel.",
+    got: "La 5e, tu l'as vue : l'antenne au sommet de la tour Eiffel.",
+    ranks: ["Myope du métro","Touriste pressé","Œil curieux","Lynx du dimanche","Presque voyant","Œil de faucon"],
+    copy: "📋 Copier mon score",
+    copied: "✅ Copié · colle-le en commentaire",
+    again: "Rejouer",
+    comment: "Œil streetwear : {d}/5 · je bats {p} % de l'Europe · rang {r} · {s}. La 5e était l'antenne de la tour Eiffel. À toi."
+  },
+  es: {
+    title: "El 99% falla el n.º 4 · test visual streetwear",
+    l1: "Nivel 1/3 · dos pares",
+    h1: "La derecha tiene 2 fallos enormes: falta una franja y la lengüeta va al revés. Tócala.",
+    left: "IZQUIERDA", right: "DERECHA",
+    pop: "+100 CI ! DEMASIADO FÁCIL !",
+    l2: "Nivel 2/3 · verdadero o falso · 250 €",
+    h2: "10 segundos. ¿Cuál es la de verdad, la de 250 €?",
+    detail: "DETALLE", price: "250 €",
+    realLine: "VERDADERO · puntadas regulares, «ATELIER» nítido, brillo de piel.",
+    fakeLine: "FALSO · una puntada roja rota, «ATEL1ER», piel mate.",
+    timeout: "Tiempo. La verdadera era",
+    you: "Elegiste",
+    l3: "Nivel 3/3 · 5 diferencias",
+    h3: "Terraza en París. Las 3 primeras son regalo. La 5.ª es cruel.",
+    ref: "REFERENCIA", find: "ENCUENTRA LAS 5",
+    ticketK: "TICKET DE OJO · PARÍS",
+    ticketT: "STREETWEAR Y ESCENA",
+    beat: "Superaste al {p} % de Europa",
+    time: "Tiempo", rank: "Rango",
+    l2row: "Test ciego 250 €",
+    yes: "acierto", no: "fallo",
+    miss: "La 5.ª (oculta): la antena en la punta de la Torre Eiffel.",
+    got: "La 5.ª la viste: la antena en la punta de la Torre Eiffel.",
+    ranks: ["Miope del metro","Turista con prisa","Ojo curioso","Lince de domingo","Casi vidente","Ojo de halcón"],
+    copy: "📋 Copiar mi marca",
+    copied: "✅ Copiado · pégalo en comentarios",
+    again: "Otra vez",
+    comment: "Ojo streetwear: {d}/5 · supero al {p} % de Europa · rango {r} · {s}. La 5.ª era la antena de la Torre Eiffel. Te toca."
+  },
+  de: {
+    title: "99 % scheitern an Nr. 4 · Streetwear-Augentest",
+    l1: "Stufe 1/3 · zwei Paar",
+    h1: "Rechts hat 2 Riesenfehler: ein Streifen fehlt, die Zunge ist umgekehrt. Tippe drauf.",
+    left: "LINKS", right: "RECHTS",
+    pop: "+100 IQ ! VIEL ZU LEICHT !",
+    l2: "Stufe 2/3 · echt oder fake · 250 €",
+    h2: "10 Sekunden. Welcher ist der echte für 250 €?",
+    detail: "DETAIL", price: "250 €",
+    realLine: "ECHT · gleichmäßige Stiche, klares „ATELIER“, Lederglanz.",
+    fakeLine: "FAKE · ein roter kaputter Stich, „ATEL1ER“, mattes Leder.",
+    timeout: "Zeit um. Das echte war",
+    you: "Du nahmst",
+    l3: "Stufe 3/3 · 5 Unterschiede",
+    h3: "Pariser Terrasse. Die ersten 3 sind geschenkt. Die 5. ist gemein.",
+    ref: "VORLAGE", find: "FINDE ALLE 5",
+    ticketK: "AUGEN-BON · PARIS",
+    ticketT: "STREETWEAR & SZENE",
+    beat: "Du schlägst {p} % von Europa",
+    time: "Zeit", rank: "Rang",
+    l2row: "Blindtest 250 €",
+    yes: "erkannt", no: "daneben",
+    miss: "Nr. 5 (versteckt): die Antenne auf der Eiffel-Spitze.",
+    got: "Nr. 5 hast du gesehen: die Antenne auf der Eiffel-Spitze.",
+    ranks: ["U-Bahn-Brille","Eiliger Tourist","Neugieriges Auge","Sonntags-Luchs","Fast hellseherisch","Falkenauge"],
+    copy: "📋 Punktzahl kopieren",
+    copied: "✅ Kopiert · ab in die Kommentare",
+    again: "Nochmal",
+    comment: "Streetwear-Auge: {d}/5 · ich schlage {p} % von Europa · Rang {r} · {s}. Nr. 5 war die Antenne auf dem Eiffelturm. Du bist dran."
+  },
+  en: {
+    title: "99% Fail on #4 · Streetwear & Scene Eye Test",
+    l1: "Level 1/3 · two pairs",
+    h1: "The right pair has 2 huge tells: one stripe missing, tongue colour flipped. Tap it.",
+    left: "LEFT", right: "RIGHT",
+    pop: "+100 IQ ! TOO EASY !",
+    l2: "Level 2/3 · real or fake · €250",
+    h2: "10 seconds. Which one is the real €250?",
+    detail: "DETAIL", price: "€250",
+    realLine: "REAL · even stitches, clean “ATELIER”, leather shine.",
+    fakeLine: "FAKE · one broken red stitch, “ATEL1ER”, matte leather.",
+    timeout: "Time. The real one was",
+    you: "You picked",
+    l3: "Level 3/3 · 5 differences",
+    h3: "Paris terrace. The first 3 are free. #5 is cruel.",
+    ref: "REFERENCE", find: "FIND ALL 5",
+    ticketK: "EYE TICKET · PARIS",
+    ticketT: "STREETWEAR & SCENE",
+    beat: "You beat {p}% of Europe",
+    time: "Time", rank: "Rank",
+    l2row: "€250 blind test",
+    yes: "spotted", no: "missed",
+    miss: "Hidden #5: the antenna on the Eiffel tip.",
+    got: "You found #5: the antenna on the Eiffel tip.",
+    ranks: ["Metro myope","Rushed tourist","Curious eye","Sunday lynx","Almost psychic","Hawk eye"],
+    copy: "📋 Copy my score",
+    copied: "✅ Copied · paste it in the comments",
+    again: "Play again",
+    comment: "Streetwear eye: {d}/5 · I beat {p}% of Europe · rank {r} · {s}. #5 was the Eiffel antenna. Your turn."
+  }
+};
+if (!I18N[lang]) lang = "fr";
+const T = () => I18N[lang];
+const HOT = {
+  1: {x:108, y:116, rx:20, ry:16},
+  2: {x:236, y:104, rx:26, ry:22},
+  3: {x:164, y:118, rx:18, ry:14},
+  4: {x:146, y:52, rx:18, ry:16},
+  5: {x:314, y:16, rx:18, ry:16}
+};
+const PCT = [4, 18, 36, 55, 71, 99.2];
+
+let level = 1, found = new Set(), l2 = null, realSide = 0;
+let ended = false, endStats = null, t0 = 0, timer = 0, lock = false;
+
+function num(n, d) {
+  const v = (d != null ? n.toFixed(d) : String(n));
+  return lang === "en" ? v : v.replace(".", ",");
+}
+function ac() {
+  if (!ac.c) ac.c = new (window.AudioContext || window.webkitAudioContext)();
+  if (ac.c.state === "suspended") ac.c.resume();
+  return ac.c;
+}
+function tone(freq, dur, type, gain) {
+  const c = ac(), t = c.currentTime, o = c.createOscillator(), g = c.createGain();
+  o.type = type || "sine";
+  o.frequency.setValueAtTime(freq, t);
+  g.gain.setValueAtTime(gain || 0.12, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.connect(g); g.connect(c.destination);
+  o.start(t); o.stop(t + dur + 0.02);
+}
+function ding() {
+  tone(880, 0.18, "sine", 0.14);
+  setTimeout(() => tone(1320, 0.22, "triangle", 0.08), 70);
+}
+function buzz() { tone(180, 0.18, "square", 0.05); }
+function burst(x, y) {
+  const fx = document.getElementById("fx");
+  for (let i = 0; i < 26; i++) {
+    const p = document.createElement("i");
+    p.style.left = x + "px"; p.style.top = y + "px";
+    const a = Math.random() * 6.28, d = 36 + Math.random() * 90;
+    p.animate([
+      {transform: "translate(-50%,-50%)", opacity: 1},
+      {transform: `translate(${Math.cos(a)*d-4}px,${Math.sin(a)*d-4}px)`, opacity: 0}
+    ], {duration: 680, easing: "cubic-bezier(.15,.7,.2,1)"});
+    fx.appendChild(p);
+    setTimeout(() => p.remove(), 700);
+  }
+}
+function flash(text) {
+  const el = document.getElementById("flash");
+  el.textContent = text;
+  el.classList.remove("show");
+  void el.offsetWidth;
+  el.classList.add("show");
+}
+function setBar(ratio, hot) {
+  const b = document.getElementById("bar");
+  b.style.transform = "scaleX(" + Math.max(0, Math.min(1, ratio)) + ")";
+  b.classList.toggle("hot", !!hot);
+  document.getElementById("time").classList.toggle("hot", !!hot);
+}
+function stopTimer() { clearInterval(timer); timer = 0; }
+function startTimer(sec, onEnd) {
+  stopTimer();
+  const t = performance.now();
+  const tick = () => {
+    const left = sec - (performance.now() - t) / 1000;
+    const hot = left < sec * 0.34;
+    setBar(Math.max(0, left / sec), hot);
+    document.getElementById("time").textContent = Math.max(0, Math.ceil(left)) + "s";
+    if (left <= 0) { stopTimer(); onEnd(); }
+  };
+  tick();
+  timer = setInterval(tick, 80);
+}
+function shoeSVG(bad) {
+  const tongue = bad ? "#fde047" : "#111111";
+  const lace = bad ? "#111111" : "#f8fafc";
+  const mid = bad ? "" : `<line x1="62" y1="96" x2="168" y2="88" stroke="#111" stroke-width="9" stroke-linecap="round"/>`;
+  return `<svg viewBox="0 0 220 170" preserveAspectRatio="xMidYMid meet">
+    <ellipse cx="112" cy="148" rx="74" ry="8" fill="rgba(0,0,0,.28)"/>
+    <rect x="30" y="118" width="164" height="20" rx="10" fill="#f8fafc" stroke="#111" stroke-width="3"/>
+    <path d="M44 120 C48 78 78 52 118 50 C156 48 186 66 196 96 L198 120 Z" fill="#fafafa" stroke="#111" stroke-width="3"/>
+    <path d="M150 54 C186 50 200 74 198 104 L162 108 C160 80 152 62 150 54 Z" fill="#e5e7eb" stroke="#111" stroke-width="3"/>
+    <rect x="40" y="72" width="18" height="48" rx="5" fill="#111"/>
+    <line x1="66" y1="82" x2="150" y2="74" stroke="#111" stroke-width="9" stroke-linecap="round"/>
+    ${mid}
+    <line x1="56" y1="110" x2="178" y2="102" stroke="#111" stroke-width="9" stroke-linecap="round"/>
+    <path d="M78 100 L88 34 Q116 20 142 40 L132 102 Z" fill="${tongue}" stroke="#111" stroke-width="3"/>
+    <path d="M100 52 H136 M98 68 H140" stroke="${lace}" stroke-width="3.5" stroke-linecap="round"/>
+  </svg>`;
+}
+function cardSVG(real) {
+  const gid = real ? "gReal" : "gFake";
+  let stitches = "";
+  for (let i = 0; i < 16; i++) {
+    const x = 16 + i * 7.4;
+    if (!real && i === 7) continue;
+    if (!real && i === 8) {
+      stitches += `<line x1="${x}" y1="70" x2="${x - 4}" y2="86" stroke="#ef4444" stroke-width="2.4"/>`;
+      continue;
+    }
+    stitches += `<line x1="${x}" y1="68" x2="${x}" y2="84" stroke="${real ? "#eab308" : "#a8a29e"}" stroke-width="2"/>`;
+  }
+  return `<svg viewBox="0 0 150 188" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#fff" stop-opacity="${real ? .7 : .06}"/>
+        <stop offset=".42" stop-color="#fff" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <rect width="150" height="188" fill="${real ? "#141414" : "#3f3f46"}"/>
+    <path d="M0 36h150M0 110h150M10 20h130" stroke="${real ? "#2a2a2a" : "#52525b"}" stroke-width="2"/>
+    ${stitches}
+    <path d="M12 52h126" stroke="${real ? "#444" : "#52525b"}" stroke-width="1"/>
+    <g transform="translate(75,128) rotate(${real ? 0 : -4})">
+      <rect x="-42" y="-16" width="84" height="30" rx="3" fill="#f5f0e6" stroke="#111" stroke-width="1.4"/>
+      <text x="0" y="5" text-anchor="middle" font-size="${real ? 13 : 12}" font-family="${real ? "Georgia,serif" : "Arial,sans-serif"}" font-weight="700" letter-spacing="${real ? 1.5 : 2.4}" fill="#111">${real ? "ATELIER" : "ATEL1ER"}</text>
+    </g>
+    <rect width="150" height="188" fill="url(#${gid})"/>
+  </svg>`;
+}
+function cafe(alt) {
+  const cat = alt ? "#fb923c" : "#1c1917";
+  const gore = alt ? "#fb7185" : "#1e3a8a";
+  const rings = [...found].map(id => {
+    const h = HOT[id];
+    return `<circle cx="${h.x}" cy="${h.y}" r="${Math.max(h.rx, h.ry) - 2}" fill="none" stroke="#22c55e" stroke-width="3"/><text x="${h.x}" y="${h.y + 4}" text-anchor="middle" font-size="11" font-weight="800" fill="#16a34a">${id}</text>`;
+  }).join("");
+  const hits = Object.entries(HOT).map(([id, h]) =>
+    `<ellipse data-diff="${id}" cx="${h.x}" cy="${h.y}" rx="${h.rx}" ry="${h.ry}" fill="rgba(0,0,0,0.001)"/>`
+  ).join("");
+  return `<svg viewBox="0 0 360 156" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <linearGradient id="sky${alt ? 1 : 0}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#7dd3fc"/>
+        <stop offset="1" stop-color="#fde68a"/>
+      </linearGradient>
+    </defs>
+    <rect width="360" height="156" fill="url(#sky${alt ? 1 : 0})"/>
+    <circle cx="46" cy="30" r="14" fill="#fde047"/>
+    <rect x="250" y="62" width="28" height="40" fill="#cbd5e1"/>
+    <rect x="278" y="48" width="22" height="54" fill="#e2e8f0"/>
+    <g fill="none" stroke="#64748b" stroke-width="2" stroke-linejoin="round">
+      <path d="M292 118 L318 28 L344 118"/>
+      <path d="M300 96 H336 M304 74 H332 M310 50 H326" stroke-width="1.6"/>
+    </g>
+    ${alt
+      ? `<line x1="318" y1="28" x2="318" y2="22" stroke="#475569" stroke-width="1.6"/>`
+      : `<line x1="318" y1="28" x2="318" y2="8" stroke="#334155" stroke-width="1.7"/><circle cx="318" cy="7" r="2.1" fill="#fbbf24"/>`}
+    <rect x="0" y="96" width="360" height="60" fill="#e7d3b0"/>
+    <path d="M0 96 H360" stroke="#a8a29e" stroke-width="3"/>
+    <rect x="0" y="46" width="58" height="50" fill="#f5e6c8" stroke="#44403c"/>
+    <rect x="8" y="56" width="16" height="18" fill="#7dd3fc" stroke="#44403c"/>
+    <rect x="30" y="56" width="16" height="18" fill="#7dd3fc" stroke="#44403c"/>
+    <text x="8" y="44" font-size="11" font-weight="800" fill="#7f1d1d" font-family="Georgia,serif">CAFÉ</text>
+    <path d="M64 78 Q120 18 176 78 Z" fill="#f8fafc" stroke="#111" stroke-width="2"/>
+    <path d="M86 78 Q112 34 100 78 Z" fill="#1e3a8a"/>
+    <path d="M112 30 L124 78 L146 78 Q138 32 120 24 Z" fill="${gore}" stroke="#111" stroke-width="1"/>
+    <path d="M150 78 Q168 36 176 78" fill="#f8fafc"/>
+    <line x1="120" y1="76" x2="120" y2="112" stroke="#44403c" stroke-width="3"/>
+    <rect x="214" y="108" width="8" height="22" fill="#44403c"/>
+    <rect x="196" y="104" width="40" height="8" rx="2" fill="#78716c"/>
+    <g transform="translate(236,96)">
+      <ellipse cx="0" cy="14" rx="16" ry="10" fill="${cat}"/>
+      <circle cx="12" cy="2" r="8" fill="${cat}"/>
+      <path d="M7 -5 L10 1 L5 1 Z M14 -6 L18 0 L13 1 Z" fill="${cat}"/>
+      <circle cx="10" cy="1" r="1.3" fill="#fff"/><circle cx="15" cy="1" r="1.3" fill="#fff"/>
+      <path d="M-14 12 Q-26 4 -16 20" fill="none" stroke="${cat}" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <ellipse cx="132" cy="126" rx="48" ry="14" fill="#d6d3d1" stroke="#57534e"/>
+    <ellipse cx="132" cy="122" rx="40" ry="10" fill="#f5f5f4" stroke="#a8a29e"/>
+    <g transform="translate(150,112)">
+      <path d="M-8 6 h16 v8 q0 6 -8 6 q-8 0 -8 -6 z" fill="#f8fafc" stroke="#444"/>
+      <path d="M8 8 h6 q4 4 0 8 h-6" fill="none" stroke="#444" stroke-width="1.4"/>
+      <ellipse cx="0" cy="6" rx="8" ry="3" fill="#6b3f2a"/>
+      <path d="M-5 5 Q0 3 5 5" fill="none" stroke="#fff" stroke-width="0.8" opacity=".85"/>
+    </g>
+    ${alt ? `<ellipse cx="108" cy="118" rx="12" ry="4" fill="#e7e5e4" stroke="#a8a29e"/>` : `
+      <ellipse cx="108" cy="120" rx="12" ry="4" fill="#fff" stroke="#d6d3d1"/>
+      <path d="M96 118 Q108 100 120 118 Q108 112 96 118" fill="#f6c36a" stroke="#b45309" stroke-width="1.2"/>`}
+    ${alt ? "" : `<g transform="translate(164,116)" stroke="#111" fill="none" stroke-width="1.7">
+      <circle cx="-7" cy="0" r="5"/><circle cx="7" cy="0" r="5"/><path d="M-2 0 H2"/><path d="M-12 0 H-16 M12 0 H16"/>
+    </g>`}
+    ${rings}
+    ${hits}
+  </svg>`;
+}
+function pips() {
+  const el = document.getElementById("pips");
+  if (level !== 3 || ended) { el.hidden = true; return; }
+  el.hidden = false;
+  el.innerHTML = [1,2,3,4,5].map(i => `<b class="${found.has(i) ? "on" : ""}"></b>`).join("");
+}
+function syncLang() {
+  document.querySelectorAll(".langs button").forEach(b => b.classList.toggle("on", b.dataset.l === lang));
+  document.title = T().title;
+  const pt = document.getElementById("pageTitle"); if (pt) pt.textContent = "🔍 " + T().title;
+  document.documentElement.lang = lang;
+}
+function render() {
+  syncLang();
+  const t = T();
+  if (ended) { renderEnd(); return; }
+  document.getElementById("lv").textContent = level === 1 ? t.l1 : level === 2 ? t.l2 : t.l3;
+  document.getElementById("hint").textContent = level === 1 ? t.h1 : level === 2 ? t.h2 : t.h3;
+  pips();
+  const stage = document.getElementById("stage");
+  if (level === 1) {
+    setBar(1, false);
+    document.getElementById("time").textContent = "∞";
+    stage.innerHTML = `<div class="pair">
+      <button class="shoe" data-shoe="good" id="shoeL"><b>${t.left}</b>${shoeSVG(false)}</button>
+      <button class="shoe bad" data-shoe="bad"><b>${t.right}</b>${shoeSVG(true)}</button>
+    </div>`;
+  } else if (level === 2) {
+    const labels = ["A", "B"];
+    stage.innerHTML = `<div class="vs">` + [0, 1].map(i => {
+      const real = i === realSide;
+      const cls = l2 === null ? "" : real ? "ok" : "no";
+      return `<button class="card ${cls}" data-pick="${i}" ${l2 !== null ? "disabled" : ""}>
+        <div class="tag"><span>${labels[i]} · ${t.detail}</span><span>${t.price}</span></div>
+        ${cardSVG(real)}
+      </button>`;
+    }).join("") + `</div>` + (l2 === null ? "" : `<div class="reveal">${revealL2()}</div>`);
+  } else {
+    stage.innerHTML = `<div class="scenes">
+      <div class="scene"><span>${t.ref}</span>${cafe(false)}</div>
+      <div class="scene"><span>${t.find}</span>${cafe(true)}</div>
+    </div>`;
+  }
+}
+function revealL2() {
+  const t = T();
+  const side = realSide === 0 ? "A" : "B";
+  if (l2 === null) return "";
+  const head = l2source === "timeout"
+    ? `${t.timeout} ${side}.`
+    : `${t.you} ${l2source}.`;
+  return `${head} ${t.realLine} ${t.fakeLine}`;
+}
+let l2source = "";
+function renderEnd() {
+  stopTimer();
+  const t = T();
+  const s = endStats;
+  document.getElementById("lv").textContent = t.ticketT;
+  document.getElementById("hint").textContent = t.beat.replace("{p}", num(s.pct, s.pct % 1 ? 1 : 0));
+  document.getElementById("pips").hidden = true;
+  setBar(s.n / 5, false);
+  document.getElementById("time").textContent = num(s.secs, 1) + "s";
+  const bars = Array.from({length: 26}, (_, i) => `<i style="width:${2 + (i * 5) % 4}px;height:${40 + ((i * 17) % 60)}%"></i>`).join("");
+  document.getElementById("stage").innerHTML = `<div class="end">
+    <div class="ticket" id="ticket">
+      <div class="th"><small>${t.ticketK}</small><strong>${t.ticketT}</strong></div>
+      <div class="score">${s.n}/5</div>
+      <div class="pct">${t.beat.replace("{p}", num(s.pct, s.pct % 1 ? 1 : 0))}</div>
+      <div class="row"><span>${t.time}</span><span>${num(s.secs, 1)} s</span></div>
+      <div class="row"><span>${t.rank}</span><span>${s.rank}</span></div>
+      <div class="row"><span>${t.l2row}</span><span>${s.l2 ? t.yes : t.no}</span></div>
+      <div class="secret">${s.n === 5 ? t.got : t.miss}</div>
+      <div class="bars">${bars}</div>
+    </div>
+    <button class="copy" id="copyBtn">${t.copy}</button>
+    <button class="again" id="againBtn">${t.again}</button>
+  </div>`;
+  document.getElementById("copyBtn").onclick = copyScore;
+  document.getElementById("againBtn").onclick = reset;
+}
+function commentText() {
+  const s = endStats, t = T();
+  return t.comment
+    .replace("{d}", s.n)
+    .replace("{p}", num(s.pct, s.pct % 1 ? 1 : 0))
+    .replace("{r}", s.rank)
+    .replace("{s}", num(s.secs, 1) + " s");
+}
+async function copyScore() {
+  const text = commentText();
+  try { await navigator.clipboard.writeText(text); }
+  catch (e) {
+    const ta = document.createElement("textarea");
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand("copy"); ta.remove();
+  }
+  const b = document.getElementById("copyBtn");
+  b.textContent = T().copied;
+}
+function showEnd() {
+  if (ended) { renderEnd(); return; }
+  ended = true;
+  stopTimer();
+  const n = found.size;
+  endStats = {
+    n, secs: (performance.now() - t0) / 1000,
+    pct: PCT[n], rank: T().ranks[n], l2: !!l2
+  };
+  renderEnd();
+}
+function winL1(e) {
+  if (lock || level !== 1) return;
+  lock = true;
+  const r = (e.currentTarget || e.target).getBoundingClientRect();
+  burst(r.left + r.width / 2, r.top + r.height / 2);
+  ding();
+  flash(T().pop);
+  if (navigator.vibrate) navigator.vibrate(18);
+  setTimeout(() => { lock = false; enter(2); }, 780);
+}
+function resolveL2(picked) {
+  if (level !== 2 || l2 !== null) return;
+  stopTimer();
+  if (picked === null) {
+    l2 = false; l2source = "timeout"; buzz();
+  } else {
+    l2 = picked === realSide;
+    l2source = picked === 0 ? "A" : "B";
+    if (l2) ding(); else buzz();
+  }
+  render();
+  setTimeout(() => { if (level === 2) enter(3); }, 1650);
+}
+function hitDiff(id) {
+  if (level !== 3 || ended || found.has(id)) return;
+  found.add(id);
+  tone(520 + found.size * 180, 0.16, "sine", 0.1);
+  if (navigator.vibrate) navigator.vibrate(10);
+  if (found.size === 5) {
+    stopTimer();
+    ding();
+    render();
+    setTimeout(showEnd, 520);
+  } else render();
+}
+function enter(n) {
+  level = n;
+  if (n === 2) {
+    l2 = null; l2source = "";
+    realSide = Math.random() < 0.5 ? 0 : 1;
+    render();
+    startTimer(10, () => resolveL2(null));
+  } else if (n === 3) {
+    found = new Set();
+    render();
+    startTimer(25, () => { if (level === 3 && !ended) showEnd(); });
+  } else render();
+}
+function reset() {
+  ended = false; endStats = null; found = new Set(); l2 = null; lock = false;
+  t0 = performance.now();
+  enter(1);
+}
+document.getElementById("stage").addEventListener("click", (e) => {
+  const diff = e.target.closest("[data-diff]");
+  if (diff) { hitDiff(Number(diff.dataset.diff)); return; }
+  const shoe = e.target.closest("[data-shoe]");
+  if (shoe && level === 1) {
+    if (shoe.dataset.shoe === "bad") winL1({currentTarget: shoe, target: shoe});
+    else {
+      shoe.classList.remove("shake"); void shoe.offsetWidth; shoe.classList.add("shake");
+      buzz();
+    }
+    return;
+  }
+  const pick = e.target.closest("[data-pick]");
+  if (pick && level === 2) resolveL2(Number(pick.dataset.pick));
+});
+document.querySelectorAll(".langs button").forEach(b => b.onclick = () => {
+  lang = b.dataset.l;
+  if (ended && endStats) endStats.rank = T().ranks[endStats.n];
+  render();
+});
+reset();
+</script>
+</body>
+</html>
