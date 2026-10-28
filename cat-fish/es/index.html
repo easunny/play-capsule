@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>🐱 Gato Ladrón de Peces 2D : ¡Esquiva al Shiba y Lleva 3 Peces a Casa!</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Play Capsule">
+<meta property="og:title" content="🐱 Gato Ladrón de Peces 2D : ¡Esquiva al Shiba y Lleva 3 Peces a Casa!">
+<meta property="og:description" content="Esquiva al Shiba, recoge los peces y vuelve a casa.">
+<meta name="description" content="Esquiva al Shiba, recoge los peces y vuelve a casa.">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:#7ec8e3;color:#3b2414;font-family:"Trebuchet MS","Segoe UI",sans-serif}
+  body{overflow:hidden;overscroll-behavior:none}
+  button{font-family:inherit}
+  .app{height:100dvh;max-width:480px;margin:0 auto;display:flex;flex-direction:column;padding:8px 10px calc(8px + env(safe-area-inset-bottom));gap:6px}
+  .top-title{font-size:12px;font-weight:900;line-height:1.3;text-align:center;border-radius:12px;padding:7px 10px;background:#fff8ee;border:1px solid rgba(120,72,32,.14);box-shadow:0 6px 16px rgba(80,40,10,.08)}
+  .hud{display:flex;align-items:center;gap:6px}
+  .langs{display:flex;gap:4px}
+  .langs a{background:#fff8ee;border:1px solid rgba(120,72,32,.16);color:#57534e;border-radius:99px;padding:3px 8px;font-size:11px;font-weight:800;text-decoration:none}
+  .langs a.on{background:#3b2414;color:#fff;border-color:#3b2414}
+  .chip{font-weight:900;font-size:13px;background:#fff8ee;border-radius:99px;padding:4px 8px;border:1px solid rgba(120,72,32,.1)}#hudLevel{margin-left:auto}
+  .hint{font-size:12px;font-weight:750;min-height:32px;line-height:1.3}
+  .hide{display:none;font-size:11px;font-weight:800;color:#14532d}
+  .hide.on{display:block}
+  .stage{flex:1;min-height:0;position:relative}
+  #stage{position:absolute;inset:0}
+  #stage canvas{image-rendering:pixelated;image-rendering:crisp-edges;border-radius:16px;touch-action:none}
+  .pad{position:absolute;left:8px;bottom:8px;z-index:4;display:grid;grid-template-columns:48px 48px 48px;grid-template-areas:". u ." "l d r";gap:4px}
+  .pad button{border:0;border-radius:12px;background:#fff8ee;color:#3b2414;font-size:18px;font-weight:900;box-shadow:0 3px 0 #8a5a32;cursor:pointer}
+  .pad button.on{transform:translateY(2px);box-shadow:0 1px 0 #8a5a32}
+  .pad .u{grid-area:u}.pad .l{grid-area:l}.pad .d{grid-area:d}.pad .r{grid-area:r}
+  .fail{display:none;position:absolute;left:12px;right:12px;bottom:168px;z-index:6;background:#7f1d1d;color:#fff;border:3px solid #fecaca;border-radius:14px;padding:12px 10px;text-align:center;font-weight:900;font-size:14px;line-height:1.3;box-shadow:4px 4px 0 #450a0a}
+  .fail.on{display:block}
+  .banner{display:none;position:absolute;left:50%;top:18%;transform:translateX(-50%);z-index:6;background:#fff8ee;color:#3b2414;border:3px solid #3b2414;border-radius:14px;padding:10px 16px;font-weight:900;font-size:22px;box-shadow:4px 4px 0 #3b2414}
+  .banner.on{display:block}
+  .receipt{display:none;position:absolute;inset:0;z-index:8;background:rgba(59,36,20,.4);align-items:center;justify-content:center;padding:12px}
+  .receipt.on{display:flex}
+  .paper{width:min(100%,340px);max-height:100%;overflow:auto;background:#fffef8;color:#292524;border-radius:8px;padding:14px 14px 12px;box-shadow:0 18px 40px rgba(0,0,0,.28);font-family:ui-monospace,Menlo,monospace}
+  .paper h2{margin:0;text-align:center;font-size:14px;letter-spacing:.06em}
+  .paper .sub{text-align:center;font-size:11px;margin:2px 0 8px}
+  .row{display:flex;justify-content:space-between;gap:8px;font-size:12px;padding:3px 0;border-bottom:1px dotted #d6d3d1}
+  .beat{text-align:center;font-family:"Trebuchet MS",sans-serif;font-weight:900;font-size:18px;margin:8px 0}
+  .copy,.again{width:100%;border:0;border-radius:12px;padding:11px 8px;font-weight:900;font-size:14px;cursor:pointer}
+  .copy{background:linear-gradient(90deg,#fbbf24,#f59e0b);color:#3b2414;margin-top:8px}
+  .again{background:#fff;color:#57534e;border:1px solid #e7e5e4;margin-top:6px}
+  .cards{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+  .xcard{display:block;text-decoration:none;color:#292524;background:#fff;border:1px solid #e7e5e4;border-radius:12px;padding:8px 10px}
+  .xcard b{display:block;font-family:"Trebuchet MS",sans-serif;font-size:13px}
+  .xcard span{font-size:11px;color:#78716c}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top-title" id="pageTitle">🐱 Gato Ladrón de Peces 2D : ¡Esquiva al Shiba y Lleva 3 Peces a Casa!</div>
+  <div class="hud">
+    <div class="langs">
+      <a href="/cat-fish/fr/" data-l="fr">FR</a>
+      <a href="/cat-fish/es/" data-l="es">ES</a>
+      <a href="/cat-fish/de/" data-l="de">DE</a>
+      <a href="/cat-fish/en/" data-l="en">EN</a>
+    </div>
+    <span class="chip" id="hudLevel">1/3</span>
+    <span class="chip" id="hudFish">🐟 0/3</span>
+    <span class="chip" id="hudTime">0.0s</span>
+  </div>
+  <div class="hint" id="hint"></div>
+  <div class="hide" id="hideChip"></div>
+  <div class="stage">
+    <div id="stage"></div>
+    <div class="pad">
+      <button class="u" type="button" data-dir="u" data-x="0" data-y="-1">▲</button>
+      <button class="l" type="button" data-dir="l" data-x="-1" data-y="0">◀</button>
+      <button class="d" type="button" data-dir="d" data-x="0" data-y="1">▼</button>
+      <button class="r" type="button" data-dir="r" data-x="1" data-y="0">▶</button>
+    </div>
+    <div class="fail" id="fail"></div>
+    <div class="banner" id="banner"></div>
+    <div class="receipt" id="receipt">
+      <div class="paper">
+        <h2 id="tkK"></h2>
+        <div class="sub" id="tkT"></div>
+        <div class="row"><span id="tkTimeL"></span><b id="tkTime"></b></div>
+        <div class="row"><span id="tkCaughtL"></span><b id="tkCaught"></b></div>
+        <div class="beat" id="tkBeat"></div>
+        <button class="copy" id="copyBtn" type="button"></button>
+        <button class="again" id="againBtn" type="button"></button>
+        <div class="cards" id="cards"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>window.CF_LANG="es";</script>
+<script src="../phaser.min.js"></script>
+<script src="../sim.js"></script>
+<script src="../game.js"></script>
+<script>
+  document.querySelector('[data-l="es"]').classList.add("on");
+  window.onerror = function (msg) {
+    var h = document.getElementById("hint");
+    if (h) h.textContent = String(msg);
+  };
+</script>
+</body>
+</html>
